@@ -70,9 +70,82 @@ function switchView(view) {
 }
 
 // ===== Bubble Canvas (Apple Watch style) =====
-let bubbleDrag = { active: false, startX: 0, startY: 0, offsetX: 0, offsetY: 0, lastX: 0, lastY: 0 };
-const BUBBLE_SIZE = 60;
+const BUBBLE_SIZE = 62;
+const BUBBLE_GAP = 10;
 const BUBBLE_POSITIONS = [];
+
+// Physics state
+const bp = {
+  x: 0, y: 0,       // current offset
+  vx: 0, vy: 0,     // velocity
+  dragging: false,
+  startX: 0, startY: 0,
+  prevX: 0, prevY: 0, prevT: 0,
+  moved: false,
+  raf: null,
+  initialized: false
+};
+
+function bubbleTotalH() {
+  const rows = Math.ceil(SUBJECTS.length / 2);
+  return rows * (BUBBLE_SIZE + BUBBLE_GAP) + BUBBLE_SIZE + 24;
+}
+
+function bubbleBounds() {
+  const canvas = document.getElementById('bubbleCanvas');
+  if (!canvas) return { minY: -9999, maxY: 0 };
+  const canvasH = canvas.offsetHeight;
+  return { minY: Math.min(0, canvasH - bubbleTotalH()), maxY: 0 };
+}
+
+function applyBubbleTransform(tiltX = 0, tiltY = 0) {
+  const inner = document.getElementById('bubbleInner');
+  if (!inner) return;
+  inner.style.transform = `translate(${bp.x}px, ${bp.y}px) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`;
+}
+
+function runPhysics() {
+  if (bp.dragging) return;
+  const { minY, maxY } = bubbleBounds();
+
+  bp.x += bp.vx;
+  bp.y += bp.vy;
+  bp.vx *= 0.90;
+  bp.vy *= 0.90;
+
+  // Elastic snap at bounds
+  if (bp.y > maxY) { bp.y += (maxY - bp.y) * 0.28; bp.vy *= 0.45; }
+  if (bp.y < minY) { bp.y += (minY - bp.y) * 0.28; bp.vy *= 0.45; }
+
+  applyBubbleTransform();
+
+  if (Math.abs(bp.vx) > 0.05 || Math.abs(bp.vy) > 0.05 || bp.y > maxY || bp.y < minY) {
+    bp.raf = requestAnimationFrame(runPhysics);
+  } else {
+    bp.raf = null;
+  }
+}
+
+function startPhysics() {
+  if (bp.raf) cancelAnimationFrame(bp.raf);
+  bp.raf = requestAnimationFrame(runPhysics);
+}
+
+function updateFisheye(mx, my) {
+  const inner = document.getElementById('bubbleInner');
+  if (!inner) return;
+  inner.querySelectorAll('.subject-bubble').forEach((el, i) => {
+    const bx = BUBBLE_POSITIONS[i].x + BUBBLE_SIZE / 2;
+    const by = BUBBLE_POSITIONS[i].y + BUBBLE_SIZE / 2;
+    // Adjust for current offset
+    const dist = Math.sqrt((mx - bp.x - bx) ** 2 + (my - bp.y - by) ** 2);
+    const maxD = 110;
+    const t = Math.max(0, 1 - dist / maxD);
+    const scale = 1 + t ** 1.6 * 0.65;
+    el.style.transform = `scale(${scale})`;
+    el.style.zIndex = Math.round(t * 10) || 1;
+  });
+}
 
 function renderMobileSubjectGrid() {
   const grid = document.getElementById('mobileSubjectGrid');
@@ -118,14 +191,18 @@ function renderSubjectList() {
   const inner = document.getElementById('bubbleInner');
   if (!inner) return;
 
-  // 1列縦並び（スクロールで全部見える）
-  const padX = 18, padY = 18;
-  const spacingY = BUBBLE_SIZE + 12;
+  // Honeycomb layout: col1 offset down by half a row
+  const padX = 10, padY = 14;
+  const colW = BUBBLE_SIZE + BUBBLE_GAP;
+  const rowH = BUBBLE_SIZE + BUBBLE_GAP;
 
   SUBJECTS.forEach((s, i) => {
-    const x = padX + (i % 2) * (BUBBLE_SIZE + 10);
-    const y = padY + Math.floor(i / 2) * spacingY;
-    BUBBLE_POSITIONS[i] = { x, y };
+    const col = i % 2;
+    const row = Math.floor(i / 2);
+    BUBBLE_POSITIONS[i] = {
+      x: padX + col * (colW * 0.9),
+      y: padY + row * rowH + (col === 1 ? rowH * 0.5 : 0)
+    };
   });
 
   inner.innerHTML = SUBJECTS.map((s, i) => {
@@ -140,10 +217,9 @@ function renderSubjectList() {
     </div>`;
   }).join('');
 
-  // クリックイベント
   inner.querySelectorAll('.subject-bubble').forEach(el => {
     el.addEventListener('click', () => {
-      if (!bubbleDrag.moved) selectSubject(el.dataset.subject);
+      if (!bp.moved) selectSubject(el.dataset.subject);
     });
   });
 
@@ -152,66 +228,97 @@ function renderSubjectList() {
 
 function setupBubbleCanvas() {
   const canvas = document.getElementById('bubbleCanvas');
-  const inner = document.getElementById('bubbleInner');
-  if (!canvas || bubbleDrag.initialized) return;
-  bubbleDrag.initialized = true;
+  if (!canvas || bp.initialized) return;
+  bp.initialized = true;
 
-  // ドラッグ
+  // Mouse
   canvas.addEventListener('mousedown', e => {
-    bubbleDrag.active = true;
-    bubbleDrag.moved = false;
-    bubbleDrag.startX = e.clientX - bubbleDrag.offsetX;
-    bubbleDrag.startY = e.clientY - bubbleDrag.offsetY;
+    if (bp.raf) cancelAnimationFrame(bp.raf);
+    bp.dragging = true; bp.moved = false;
+    bp.startX = e.clientX - bp.x;
+    bp.startY = e.clientY - bp.y;
+    bp.prevX = e.clientX; bp.prevY = e.clientY;
+    bp.prevT = Date.now();
+    bp.vx = 0; bp.vy = 0;
   });
 
   window.addEventListener('mousemove', e => {
-    if (bubbleDrag.active) {
-      const dx = e.clientX - bubbleDrag.startX;
-      const dy = e.clientY - bubbleDrag.startY;
-      if (Math.abs(dx - bubbleDrag.offsetX) > 3 || Math.abs(dy - bubbleDrag.offsetY) > 3) bubbleDrag.moved = true;
-      bubbleDrag.offsetX = dx;
-      bubbleDrag.offsetY = dy;
-      inner.style.transform = `translate(${dx}px, ${dy}px)`;
-    }
-    // fisheye scale
     const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left - bubbleDrag.offsetX;
-    const my = e.clientY - rect.top - bubbleDrag.offsetY;
-    inner.querySelectorAll('.subject-bubble').forEach((el, i) => {
-      const bx = BUBBLE_POSITIONS[i].x + BUBBLE_SIZE / 2;
-      const by = BUBBLE_POSITIONS[i].y + BUBBLE_SIZE / 2;
-      const dist = Math.sqrt((mx - bx) ** 2 + (my - by) ** 2);
-      const maxDist = 120;
-      const scale = dist < maxDist ? 1 + (1 - dist / maxDist) * 0.45 : 1;
-      el.style.transform = `scale(${scale})`;
-      el.style.zIndex = dist < maxDist ? Math.round((1 - dist / maxDist) * 10) : 1;
-    });
+    updateFisheye(e.clientX - rect.left, e.clientY - rect.top);
+
+    if (!bp.dragging) return;
+    const now = Date.now();
+    const dt = Math.max(1, now - bp.prevT);
+    bp.vx = (e.clientX - bp.prevX) / dt * 14;
+    bp.vy = (e.clientY - bp.prevY) / dt * 14;
+    bp.prevX = e.clientX; bp.prevY = e.clientY; bp.prevT = now;
+
+    const nx = e.clientX - bp.startX;
+    const ny = e.clientY - bp.startY;
+    if (Math.abs(nx - bp.x) > 3 || Math.abs(ny - bp.y) > 3) bp.moved = true;
+
+    const { minY, maxY } = bubbleBounds();
+    bp.x = nx;
+    bp.y = ny > maxY ? maxY + (ny - maxY) * 0.25 : ny < minY ? minY + (ny - minY) * 0.25 : ny;
+
+    // Subtle 3D tilt while dragging
+    const tiltY = Math.max(-8, Math.min(8, bp.vx * 1.5));
+    const tiltX = Math.max(-5, Math.min(5, -bp.vy * 0.8));
+    applyBubbleTransform(tiltX, tiltY);
   });
 
-  window.addEventListener('mouseup', () => { bubbleDrag.active = false; });
+  window.addEventListener('mouseup', () => {
+    if (!bp.dragging) return;
+    bp.dragging = false;
+    startPhysics();
+  });
 
-  // タッチ対応
+  // Touch
   canvas.addEventListener('touchstart', e => {
     const t = e.touches[0];
-    bubbleDrag.active = true;
-    bubbleDrag.moved = false;
-    bubbleDrag.startX = t.clientX - bubbleDrag.offsetX;
-    bubbleDrag.startY = t.clientY - bubbleDrag.offsetY;
+    if (bp.raf) cancelAnimationFrame(bp.raf);
+    bp.dragging = true; bp.moved = false;
+    bp.startX = t.clientX - bp.x;
+    bp.startY = t.clientY - bp.y;
+    bp.prevX = t.clientX; bp.prevY = t.clientY;
+    bp.prevT = Date.now();
+    bp.vx = 0; bp.vy = 0;
   }, { passive: true });
 
   canvas.addEventListener('touchmove', e => {
     const t = e.touches[0];
-    if (bubbleDrag.active) {
-      const dx = t.clientX - bubbleDrag.startX;
-      const dy = t.clientY - bubbleDrag.startY;
-      if (Math.abs(dx - bubbleDrag.offsetX) > 3) bubbleDrag.moved = true;
-      bubbleDrag.offsetX = dx;
-      bubbleDrag.offsetY = dy;
-      inner.style.transform = `translate(${dx}px, ${dy}px)`;
-    }
+    const rect = canvas.getBoundingClientRect();
+    updateFisheye(t.clientX - rect.left, t.clientY - rect.top);
+
+    if (!bp.dragging) return;
+    const now = Date.now();
+    const dt = Math.max(1, now - bp.prevT);
+    bp.vx = (t.clientX - bp.prevX) / dt * 14;
+    bp.vy = (t.clientY - bp.prevY) / dt * 14;
+    bp.prevX = t.clientX; bp.prevY = t.clientY; bp.prevT = now;
+
+    const nx = t.clientX - bp.startX;
+    const ny = t.clientY - bp.startY;
+    if (Math.abs(nx - bp.x) > 3) bp.moved = true;
+
+    const { minY, maxY } = bubbleBounds();
+    bp.x = nx;
+    bp.y = ny > maxY ? maxY + (ny - maxY) * 0.25 : ny < minY ? minY + (ny - minY) * 0.25 : ny;
+
+    const tiltY = Math.max(-8, Math.min(8, bp.vx * 1.5));
+    const tiltX = Math.max(-5, Math.min(5, -bp.vy * 0.8));
+    applyBubbleTransform(tiltX, tiltY);
   }, { passive: true });
 
-  canvas.addEventListener('touchend', () => { bubbleDrag.active = false; });
+  canvas.addEventListener('touchend', () => {
+    if (!bp.dragging) return;
+    bp.dragging = false;
+    // Reset fisheye on touch end
+    document.querySelectorAll('.subject-bubble').forEach(el => {
+      el.style.transform = 'scale(1)';
+    });
+    startPhysics();
+  });
 }
 
 function selectSubject(subjectId) {
