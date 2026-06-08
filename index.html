@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyTube - 受験生のための動画学習</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <h1>📚 StudyTube</h1>
+      <nav class="header-nav">
+        <button class="nav-btn active" data-view="search">🔍 検索</button>
+        <button class="nav-btn" data-view="history">📺 履歴</button>
+  <button class="nav-btn" data-view="lists">⭐ マイリスト</button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- サイドバー (Apple Watch bubble canvas) -->
+    <aside class="sidebar" id="sidebar">
+      <div id="bubbleCanvas">
+        <div id="bubbleInner"></div>
+      </div>
+    </aside>
+
+    <!-- メインコンテンツ -->
+    <main class="main">
+
+      <!-- 検索ビュー -->
+      <div id="searchView">
+        <div id="welcomeView" class="welcome">
+          <div class="welcome-inner">
+            <p class="welcome-icon">🎯</p>
+            <h2>教科と単元を選んで動画を探そう</h2>
+            <p>左のメニューから教科を選んでください</p>
+          </div>
+        </div>
+        <div id="unitView" class="hidden">
+          <div class="breadcrumb" id="breadcrumb"></div>
+          <div class="unit-grid" id="unitGrid"></div>
+        </div>
+        <div id="videoView" class="hidden">
+          <div class="breadcrumb" id="videoBreadcrumb"></div>
+          <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="この単元内で検索..." />
+            <select id="orderSelect">
+              <option value="relevance">関連度順</option>
+              <option value="viewCount">再生回数順</option>
+              <option value="rating">評価順</option>
+              <option value="date">新しい順</option>
+            </select>
+            <button id="searchBtn">検索</button>
+          </div>
+          <div id="apiKeyAlert" class="api-alert hidden">
+            <p>⚠️ YouTube APIキーが必要です。<a href="#" id="openApiModal">ここをクリックして設定</a></p>
+          </div>
+          <div id="videoGrid" class="video-grid"></div>
+          <div id="loadingSpinner" class="spinner hidden"></div>
+        </div>
+      </div>
+
+      <!-- 履歴ビュー -->
+      <div id="historyView" class="hidden">
+        <div class="page-header">
+          <h2>📺 視聴履歴</h2>
+          <div class="page-header-actions">
+            <select id="historySubjectFilter">
+              <option value="">すべての教科</option>
+            </select>
+            <button id="clearHistoryBtn" class="btn-danger-sm">🗑 履歴を削除</button>
+          </div>
+        </div>
+        <div id="historyGrid" class="video-grid"></div>
+        <p id="emptyHistory" class="empty-msg hidden">視聴履歴がありません</p>
+      </div>
+
+      <!-- マイリストビュー -->
+      <div id="listsView" class="hidden">
+        <div class="page-header">
+          <h2>⭐ マイリスト</h2>
+          <button id="newListBtn" class="btn-primary-sm">＋ 新しいリスト</button>
+        </div>
+        <div id="listsContainer"></div>
+        <p id="emptyLists" class="empty-msg hidden">リストがありません。「＋ 新しいリスト」から作成してください</p>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- メモモーダル -->
+  <div id="memoModal" class="modal hidden">
+    <div class="modal-box">
+      <h3>📝 メモ</h3>
+      <div class="memo-video-info" id="memoVideoInfo"></div>
+      <textarea id="memoText" placeholder="この動画のメモを書く..." rows="6"></textarea>
+      <div class="modal-btns">
+        <button id="saveMemo" class="btn-primary">保存</button>
+        <button id="closeMemo" class="btn-secondary">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- リスト追加モーダル -->
+  <div id="addToListModal" class="modal hidden">
+    <div class="modal-box">
+      <h3>⭐ リストに追加</h3>
+      <div id="addToListOptions"></div>
+      <div style="margin-top:12px">
+        <button id="createNewListFromAdd" class="btn-secondary" style="width:100%">＋ 新しいリストを作成して追加</button>
+      </div>
+      <div class="modal-btns">
+        <button id="closeAddToList" class="btn-secondary">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新規リスト作成モーダル -->
+  <div id="newListModal" class="modal hidden">
+    <div class="modal-box">
+      <h3>＋ 新しいリストを作成</h3>
+      <input type="text" id="newListName" placeholder="リスト名（例：数学II 苦手単元）" />
+      <div class="modal-btns">
+        <button id="saveNewList" class="btn-primary">作成</button>
+        <button id="closeNewList" class="btn-secondary">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APIキー設定モーダル -->
+  <div id="apiModal" class="modal hidden">
+    <div class="modal-box">
+      <h3>🔑 YouTube APIキーを設定</h3>
+      <p style="font-size:0.85rem;color:#718096;margin-bottom:12px">
+        動画を検索するにはYouTube Data API v3のキーが必要です。<br>
+        <a href="https://console.cloud.google.com/" target="_blank" style="color:#4a90d9">Google Cloud Console</a>
+        で無料取得できます。キーはこのブラウザにのみ保存されます。
+      </p>
+      <input type="text" id="apiKeyInput" placeholder="AIza..." />
+      <div class="modal-btns">
+        <button id="saveApiKey" class="btn-primary">保存</button>
+        <button id="closeModal" class="btn-secondary">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
