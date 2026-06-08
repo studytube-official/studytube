@@ -88,7 +88,30 @@ function renderMobileSubjectGrid() {
 function showMobileSubjects() {
   currentSubject = null; currentUnit = null; currentTopic = null;
   document.querySelectorAll('.subject-bubble').forEach(el => el.classList.remove('active'));
+  document.body.classList.remove('subject-selected');
   hide('unitView'); hide('videoView'); show('welcomeView');
+}
+
+// ===== Depth scroll entrance =====
+function applyDepthIn(selector) {
+  const els = document.querySelectorAll(selector);
+  els.forEach(el => {
+    el.classList.remove('depth-in');
+    void el.offsetWidth; // reflow
+    el.classList.add('depth-in');
+  });
+  // IntersectionObserver for below-fold cards
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.remove('depth-in');
+        void entry.target.offsetWidth;
+        entry.target.classList.add('depth-in');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.05, rootMargin: '0px 0px -20px 0px' });
+  els.forEach(el => observer.observe(el));
 }
 
 function renderSubjectList() {
@@ -194,7 +217,7 @@ function setupBubbleCanvas() {
 function selectSubject(subjectId) {
   currentSubject = SUBJECTS.find(s => s.id === subjectId);
   currentUnit = null; currentTopic = null;
-  // バブルのアクティブ状態だけ更新（再描画しない）
+  document.body.classList.add('subject-selected');
   document.querySelectorAll('.subject-bubble').forEach(el => {
     el.classList.toggle('active', el.dataset.subject === subjectId);
   });
@@ -213,6 +236,7 @@ function showUnitView() {
       <p>${u.topics.length}単元</p>
     </div>
   `).join('');
+  applyDepthIn('#unitGrid .unit-card');
 }
 
 function selectUnit(unitId) {
@@ -292,6 +316,7 @@ function renderVideos(items) {
     };
     return videoCard(v, 'search');
   }).join('');
+  applyDepthIn('#videoGrid .video-card');
 }
 
 // ===== Video Card =====
