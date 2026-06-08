@@ -37,12 +37,15 @@
             <h2>教科と単元を選んで動画を探そう</h2>
             <p>左のメニューから教科を選んでください</p>
           </div>
+          <div class="mobile-subject-grid" id="mobileSubjectGrid"></div>
         </div>
         <div id="unitView" class="hidden">
+          <button class="mobile-back-btn" onclick="showMobileSubjects()">← 教科選択に戻る</button>
           <div class="breadcrumb" id="breadcrumb"></div>
           <div class="unit-grid" id="unitGrid"></div>
         </div>
         <div id="videoView" class="hidden">
+          <button class="mobile-back-btn" id="videoBackBtn" onclick="showUnitView()">← 単元選択に戻る</button>
           <div class="breadcrumb" id="videoBreadcrumb"></div>
           <div class="search-bar">
             <input type="text" id="searchInput" placeholder="この単元内で検索..." />

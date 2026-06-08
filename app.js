@@ -21,6 +21,7 @@ function saveNotes(d)    { localStorage.setItem('st_notes', JSON.stringify(d)); 
 // ===== Init =====
 function init() {
   renderSubjectList();
+  renderMobileSubjectGrid();
   bindNav();
   document.getElementById('searchBtn').addEventListener('click', doSearch);
   document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
@@ -72,6 +73,23 @@ function switchView(view) {
 let bubbleDrag = { active: false, startX: 0, startY: 0, offsetX: 0, offsetY: 0, lastX: 0, lastY: 0 };
 const BUBBLE_SIZE = 60;
 const BUBBLE_POSITIONS = [];
+
+function renderMobileSubjectGrid() {
+  const grid = document.getElementById('mobileSubjectGrid');
+  if (!grid) return;
+  grid.innerHTML = SUBJECTS.map(s => `
+    <div class="mobile-subject-card" onclick="selectSubject('${s.id}')">
+      <div class="sub-icon">${s.icon}</div>
+      <div class="sub-name">${s.name}</div>
+    </div>
+  `).join('');
+}
+
+function showMobileSubjects() {
+  currentSubject = null; currentUnit = null; currentTopic = null;
+  document.querySelectorAll('.subject-bubble').forEach(el => el.classList.remove('active'));
+  hide('unitView'); hide('videoView'); show('welcomeView');
+}
 
 function renderSubjectList() {
   const inner = document.getElementById('bubbleInner');
