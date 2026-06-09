@@ -73,19 +73,32 @@ function switchView(view) {
 const BUBBLE_SIZE = 76;
 
 const bp = {
-  x: 0,
-  y: 0,
-  vx: 0,
-  vy: 0,
   t: 0,
   transitioning: false,
   dragging: false,
-  startX: 0, startY: 0, prevX: 0, prevY: 0, prevT: 0,
+  draggedEl: null,
+  startX: 0, startY: 0, startNodeX: 0, startNodeY: 0,
   moved: false,
   raf: null,
   loop: null,
   initialized: false
 };
+
+function loadSubjectPositions() {
+  try { return JSON.parse(localStorage.getItem('st_subject_positions') || '{}'); }
+  catch { return {}; }
+}
+
+function saveSubjectPositions() {
+  const positions = {};
+  document.querySelectorAll('.subject-bubble').forEach(el => {
+    positions[el.dataset.subject] = {
+      x: Number(el.dataset.x) || 0,
+      y: Number(el.dataset.y) || 0
+    };
+  });
+  localStorage.setItem('st_subject_positions', JSON.stringify(positions));
+}
 
 function applyCarousel() {
   if (bp.transitioning) return;
@@ -99,11 +112,12 @@ function applyCarousel() {
   const maxDist = Math.max(180, Math.hypot(centerX, centerY));
 
   inner.querySelectorAll('.subject-bubble').forEach((el, i) => {
-    const idle = bp.dragging ? 0 : 1;
+    const isDragged = el === bp.draggedEl;
+    const idle = (bp.dragging || isDragged) ? 0 : 1;
     const driftX = Math.sin(bp.t * 0.0013 + i * 1.7) * 4 * idle;
     const driftY = Math.cos(bp.t * 0.0011 + i * 1.3) * 4 * idle;
-    const x = Number(el.dataset.x) + bp.x + driftX;
-    const y = Number(el.dataset.y) + bp.y + driftY;
+    const x = Number(el.dataset.x) + driftX;
+    const y = Number(el.dataset.y) + driftY;
     const dist = Math.hypot(x, y);
     const focus = Math.max(0, 1 - dist / maxDist);
     const scale = 0.76 + focus * 0.42;
@@ -120,12 +134,6 @@ function applyCarousel() {
 
 function runBubbleLoop(ts = 0) {
   bp.t = ts;
-  if (!bp.dragging) {
-    bp.x += bp.vx;
-    bp.y += bp.vy;
-    bp.vx *= 0.9;
-    bp.vy *= 0.9;
-  }
   applyCarousel();
   bp.loop = requestAnimationFrame(runBubbleLoop);
 }
@@ -184,12 +192,16 @@ function renderSubjectList() {
   const rows = Math.ceil(SUBJECTS.length / cols);
   const startX = -(cols - 1) * gapX / 2;
   const startY = -(rows - 1) * gapY / 2;
+  const savedPositions = loadSubjectPositions();
 
   inner.innerHTML = SUBJECTS.map((s, i) => {
     const row = Math.floor(i / cols);
     const col = i % cols;
-    const x = startX + col * gapX + (row % 2 ? gapX / 2 : 0);
-    const y = startY + row * gapY;
+    const defaultX = startX + col * gapX + (row % 2 ? gapX / 2 : 0);
+    const defaultY = startY + row * gapY;
+    const saved = savedPositions[s.id];
+    const x = Number.isFinite(saved?.x) ? saved.x : defaultX;
+    const y = Number.isFinite(saved?.y) ? saved.y : defaultY;
     const active = currentSubject?.id === s.id;
     return `<div class="subject-bubble${active ? ' active' : ''}"
       id="bubble-${s.id}"
@@ -203,6 +215,11 @@ function renderSubjectList() {
   }).join('');
 
   inner.querySelectorAll('.subject-bubble').forEach(el => {
+    el.addEventListener('mousedown', e => startNodeDrag(el, e.clientX, e.clientY));
+    el.addEventListener('touchstart', e => {
+      const t = e.touches[0];
+      startNodeDrag(el, t.clientX, t.clientY);
+    }, { passive: true });
     el.addEventListener('click', () => {
       if (!bp.moved) selectSubject(el.dataset.subject);
     });
@@ -218,56 +235,54 @@ function setupBubbleCanvas() {
   if (!canvas || bp.initialized) return;
   bp.initialized = true;
 
-  function startDrag(x, y) {
-    if (bp.raf) cancelAnimationFrame(bp.raf);
-    bp.dragging = true; bp.moved = false;
-    bp.startX = x; bp.startY = y; bp.prevX = x; bp.prevY = y; bp.prevT = Date.now();
-    bp.vx = 0; bp.vy = 0;
-  }
+  window.addEventListener('mousemove', e => dragNodeTo(e.clientX, e.clientY));
+  window.addEventListener('mouseup', endNodeDrag);
 
-  function dragTo(x, y) {
+  window.addEventListener('touchmove', e => {
     if (!bp.dragging) return;
-    const now = Date.now();
-    const dt = Math.max(1, now - bp.prevT);
-    const dx = x - bp.prevX;
-    const dy = y - bp.prevY;
-    if (Math.hypot(x - bp.startX, y - bp.startY) > 4) bp.moved = true;
-    bp.vx = (dx / dt) * 16;
-    bp.vy = (dy / dt) * 16;
-    bp.x += dx;
-    bp.y += dy;
-    bp.prevX = x; bp.prevY = y; bp.prevT = now;
-    applyCarousel();
-  }
-
-  function endDrag() {
-    if (!bp.dragging) return;
-    bp.dragging = false;
-    startBubbleLoop();
-  }
-
-  canvas.addEventListener('mousedown', e => startDrag(e.clientX, e.clientY));
-  window.addEventListener('mousemove', e => dragTo(e.clientX, e.clientY));
-  window.addEventListener('mouseup', endDrag);
-
-  canvas.addEventListener('touchstart', e => {
     const t = e.touches[0];
-    startDrag(t.clientX, t.clientY);
+    dragNodeTo(t.clientX, t.clientY);
   }, { passive: true });
 
-  canvas.addEventListener('touchmove', e => {
-    const t = e.touches[0];
-    dragTo(t.clientX, t.clientY);
-  }, { passive: true });
-
-  canvas.addEventListener('touchend', endDrag);
+  window.addEventListener('touchend', endNodeDrag);
   window.addEventListener('resize', applyCarousel);
+}
+
+function startNodeDrag(el, x, y) {
+  if (bp.transitioning) return;
+  bp.draggedEl = el;
+  bp.dragging = true;
+  bp.moved = false;
+  bp.startX = x;
+  bp.startY = y;
+  bp.startNodeX = Number(el.dataset.x) || 0;
+  bp.startNodeY = Number(el.dataset.y) || 0;
+  el.classList.add('dragging');
+}
+
+function dragNodeTo(x, y) {
+  if (!bp.dragging || !bp.draggedEl) return;
+  const dx = x - bp.startX;
+  const dy = y - bp.startY;
+  if (Math.hypot(dx, dy) > 4) bp.moved = true;
+  bp.draggedEl.dataset.x = String(bp.startNodeX + dx);
+  bp.draggedEl.dataset.y = String(bp.startNodeY + dy);
+  applyCarousel();
+}
+
+function endNodeDrag() {
+  if (!bp.dragging) return;
+  bp.draggedEl?.classList.remove('dragging');
+  if (bp.moved) saveSubjectPositions();
+  bp.dragging = false;
+  window.setTimeout(() => { bp.moved = false; }, 0);
+  bp.draggedEl = null;
 }
 
 function selectSubject(subjectId) {
   currentSubject = SUBJECTS.find(s => s.id === subjectId);
   currentUnit = null; currentTopic = null;
-  bp.vx = 0; bp.vy = 0; bp.dragging = false;
+  bp.dragging = false;
   document.querySelectorAll('.subject-bubble').forEach(el => {
     el.classList.toggle('active', el.dataset.subject === subjectId);
   });
@@ -283,8 +298,8 @@ function collapseSubjectNodes(subjectId, done) {
 
   bubbles.forEach((el, i) => {
     const active = el.dataset.subject === subjectId;
-    const x = Number(el.dataset.x) + bp.x;
-    const y = Number(el.dataset.y) + bp.y;
+    const x = Number(el.dataset.x);
+    const y = Number(el.dataset.y);
     el.style.transitionDelay = `${Math.min(i * 14, 150)}ms`;
     el.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${active ? 1.16 : 0.82})`;
     el.style.opacity = active ? '1' : '0.72';
@@ -304,7 +319,6 @@ function collapseSubjectNodes(subjectId, done) {
       el.classList.remove('node-converging');
       el.style.transitionDelay = '';
     });
-    bp.x = 0; bp.y = 0;
     bp.transitioning = false;
     applyCarousel();
     done();

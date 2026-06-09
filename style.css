@@ -1109,3 +1109,44 @@ header h1 {
     background-position: top left, top left, center, center top;
   }
 }
+
+/* Floating subject nodes directly over the background */
+.bubble-shell {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.bubble-shell::before {
+  display: none;
+}
+
+.bubble-shell::after {
+  display: none;
+}
+
+.bubble-fade-overlay {
+  display: none;
+}
+
+#bubbleCanvas {
+  overflow: visible;
+}
+
+.subject-bubble.dragging {
+  cursor: grabbing;
+  filter: saturate(1.18) brightness(1.06);
+  box-shadow:
+    0 0 42px rgba(0,215,255,0.42),
+    0 20px 44px rgba(0,120,130,0.24),
+    inset 0 1px 0 rgba(255,255,255,0.98);
+}
+
+@media (max-width: 768px) {
+  .bubble-shell::before {
+    inset: 0;
+    border-radius: 18px;
+  }
+  .bubble-shell::after { display: none; }
+}
