@@ -907,12 +907,14 @@ body {
 
 body::before {
   background:
-    linear-gradient(rgba(0,175,170,0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,175,170,0.045) 1px, transparent 1px),
-    radial-gradient(ellipse 90% 55% at 50% 0%, rgba(172,245,255,0.7), transparent 72%),
-    radial-gradient(ellipse 70% 70% at 0% 100%, rgba(158,255,198,0.45), transparent 65%),
+    linear-gradient(rgba(0,175,170,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,175,170,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(240,255,250,0.76), rgba(226,252,255,0.55) 42%, rgba(235,255,239,0.64)),
+    radial-gradient(ellipse 95% 62% at 58% 14%, rgba(232,255,252,0.62), transparent 66%),
+    url("assets/future-school-hero.png"),
     linear-gradient(160deg, #f2fff9 0%, #def7ff 48%, #efffec 100%);
-  background-size: 34px 34px, 34px 34px, auto, auto, auto;
+  background-size: 34px 34px, 34px 34px, auto, auto, cover, auto;
+  background-position: top left, top left, center, center, center top, center;
 }
 
 body::after {
@@ -948,8 +950,8 @@ header h1 {
 
 .bubble-shell {
   background:
-    radial-gradient(circle at 50% 42%, rgba(255,255,255,0.68), rgba(213,255,244,0.32) 48%, rgba(0,190,180,0.1) 100%),
-    linear-gradient(150deg, rgba(255,255,255,0.74), rgba(226,255,247,0.4));
+    radial-gradient(circle at 50% 42%, rgba(255,255,255,0.78), rgba(213,255,244,0.46) 48%, rgba(0,190,180,0.12) 100%),
+    linear-gradient(150deg, rgba(255,255,255,0.82), rgba(226,255,247,0.5));
   border: 1px solid rgba(0,215,255,0.28);
   box-shadow:
     0 18px 54px rgba(0,132,150,0.14),
@@ -972,12 +974,12 @@ header h1 {
 }
 
 .bubble-shell::after {
-  content: "NEURAL SUBJECT MAP";
+  content: "ドラッグで教科を選ぶ";
   bottom: 16px;
   background: rgba(239,255,251,0.74);
   color: rgba(0,105,118,0.72);
   border: 1px solid rgba(0,215,255,0.2);
-  letter-spacing: 0.08em;
+  letter-spacing: 0;
 }
 
 .bubble-fade-overlay {
@@ -989,10 +991,10 @@ header h1 {
 .subject-bubble {
   border-color: rgba(0,215,255,0.34);
   background:
-    radial-gradient(circle at 32% 24%, rgba(255,255,255,1), rgba(227,255,249,0.9) 44%, rgba(174,255,224,0.72) 100%);
+    radial-gradient(circle at 32% 24%, rgba(255,255,255,1), rgba(232,255,250,0.95) 42%, rgba(182,255,229,0.78) 100%);
   box-shadow:
-    0 0 28px rgba(0,215,255,0.2),
-    0 10px 26px rgba(0,120,130,0.16),
+    0 0 30px rgba(0,215,255,0.22),
+    0 12px 28px rgba(0,120,130,0.18),
     inset 0 1px 0 rgba(255,255,255,0.98);
 }
 
@@ -1028,11 +1030,17 @@ header h1 {
 }
 
 .bubble-icon {
+  font-size: 1.65rem;
   filter: drop-shadow(0 0 8px rgba(0,215,255,0.32));
 }
 
 .bubble-label {
   color: #0a545d;
+  font-size: 0.64rem;
+  font-weight: 900;
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.92),
+    0 0 8px rgba(255,255,255,0.74);
 }
 
 .welcome,
@@ -1047,8 +1055,8 @@ header h1 {
   position: relative;
   overflow: hidden;
   background:
-    linear-gradient(90deg, rgba(237,255,249,0.72), rgba(232,255,249,0.42) 42%, rgba(229,250,255,0.24)),
-    linear-gradient(0deg, rgba(235,255,248,0.52), rgba(235,255,248,0.04)),
+    linear-gradient(90deg, rgba(237,255,249,0.7), rgba(232,255,249,0.45) 42%, rgba(229,250,255,0.28)),
+    linear-gradient(0deg, rgba(235,255,248,0.48), rgba(235,255,248,0.04)),
     url("assets/future-school-hero.png");
   background-size: cover;
   background-position: center;
@@ -1091,4 +1099,13 @@ header h1 {
   .bubble-shell::before { inset: 12px; border-radius: 18px; }
   .bubble-shell::after { bottom: 13px; font-size: 0.62rem; }
   #welcomeView.welcome { display: none; }
+  body::before {
+    background:
+      linear-gradient(rgba(0,175,170,0.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,175,170,0.055) 1px, transparent 1px),
+      linear-gradient(145deg, rgba(239,255,250,0.88), rgba(222,250,255,0.72) 46%, rgba(235,255,239,0.78)),
+      url("assets/future-school-hero.png");
+    background-size: 28px 28px, 28px 28px, auto, cover;
+    background-position: top left, top left, center, center top;
+  }
 }

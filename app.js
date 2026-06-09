@@ -70,7 +70,7 @@ function switchView(view) {
 }
 
 // ===== Apple Watch-style subject bubbles =====
-const BUBBLE_SIZE = 70;
+const BUBBLE_SIZE = 76;
 
 const bp = {
   x: 0,
@@ -106,8 +106,8 @@ function applyCarousel() {
     const y = Number(el.dataset.y) + bp.y + driftY;
     const dist = Math.hypot(x, y);
     const focus = Math.max(0, 1 - dist / maxDist);
-    const scale = 0.7 + focus * 0.5;
-    const opacity = 0.42 + focus * 0.58;
+    const scale = 0.76 + focus * 0.42;
+    const opacity = 0.58 + focus * 0.42;
     const rotate = Math.sin(bp.t * 0.0009 + i) * 2.5 * idle;
     const glow = 0.25 + focus * 0.75;
 
@@ -179,8 +179,8 @@ function renderSubjectList() {
   if (!inner) return;
 
   const cols = 4;
-  const gapX = 68;
-  const gapY = 64;
+  const gapX = 78;
+  const gapY = 72;
   const rows = Math.ceil(SUBJECTS.length / cols);
   const startX = -(cols - 1) * gapX / 2;
   const startY = -(rows - 1) * gapY / 2;
