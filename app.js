@@ -69,54 +69,69 @@ function switchView(view) {
   }
 }
 
-// ===== 3D Carousel =====
-const BUBBLE_SIZE = 60;
-const CAROUSEL_R = 128; // radius of the 3D circle
+// ===== Apple Watch-style subject bubbles =====
+const BUBBLE_SIZE = 70;
 
 const bp = {
-  angle: 0,      // current rotation in degrees
-  velocity: 0,   // angular velocity (deg/frame)
+  x: 0,
+  y: 0,
+  vx: 0,
+  vy: 0,
+  t: 0,
+  transitioning: false,
   dragging: false,
-  startY: 0, prevY: 0, prevT: 0,
+  startX: 0, startY: 0, prevX: 0, prevY: 0, prevT: 0,
   moved: false,
   raf: null,
+  loop: null,
   initialized: false
 };
 
 function applyCarousel() {
+  if (bp.transitioning) return;
+  const canvas = document.getElementById('bubbleCanvas');
   const inner = document.getElementById('bubbleInner');
-  if (!inner) return;
-  inner.style.transform = `rotateX(${bp.angle}deg)`;
+  if (!canvas || !inner) return;
 
-  // Depth-based opacity & scale for each bubble
-  const step = 360 / SUBJECTS.length;
+  const rect = canvas.getBoundingClientRect();
+  const centerX = rect.width / 2;
+  const centerY = rect.height / 2;
+  const maxDist = Math.max(180, Math.hypot(centerX, centerY));
+
   inner.querySelectorAll('.subject-bubble').forEach((el, i) => {
-    const a = ((i * step - bp.angle) % 360 + 360) % 360;
-    const rad = a * Math.PI / 180;
-    const depth = Math.cos(rad); // 1=front, -1=back
-    const opacity = 0.22 + 0.78 * (depth + 1) / 2;
-    const scale = 0.72 + 0.28 * (depth + 1) / 2;
-    el.style.opacity = opacity;
-    el.style.transform = `rotateX(${i * step}deg) translateZ(${CAROUSEL_R}px) scale(${scale})`;
-    el.style.zIndex = Math.round((depth + 1) * 5);
+    const idle = bp.dragging ? 0 : 1;
+    const driftX = Math.sin(bp.t * 0.0013 + i * 1.7) * 4 * idle;
+    const driftY = Math.cos(bp.t * 0.0011 + i * 1.3) * 4 * idle;
+    const x = Number(el.dataset.x) + bp.x + driftX;
+    const y = Number(el.dataset.y) + bp.y + driftY;
+    const dist = Math.hypot(x, y);
+    const focus = Math.max(0, 1 - dist / maxDist);
+    const scale = 0.7 + focus * 0.5;
+    const opacity = 0.42 + focus * 0.58;
+    const rotate = Math.sin(bp.t * 0.0009 + i) * 2.5 * idle;
+    const glow = 0.25 + focus * 0.75;
+
+    el.style.opacity = opacity.toFixed(3);
+    el.style.zIndex = String(Math.round(scale * 100));
+    el.style.setProperty('--node-glow', glow.toFixed(3));
+    el.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale}) rotate(${rotate}deg)`;
   });
 }
 
-function runPhysics() {
-  if (bp.dragging) return;
-  bp.angle += bp.velocity;
-  bp.velocity *= 0.93;
-  applyCarousel();
-  if (Math.abs(bp.velocity) > 0.02) {
-    bp.raf = requestAnimationFrame(runPhysics);
-  } else {
-    bp.raf = null;
+function runBubbleLoop(ts = 0) {
+  bp.t = ts;
+  if (!bp.dragging) {
+    bp.x += bp.vx;
+    bp.y += bp.vy;
+    bp.vx *= 0.9;
+    bp.vy *= 0.9;
   }
+  applyCarousel();
+  bp.loop = requestAnimationFrame(runBubbleLoop);
 }
 
-function startPhysics() {
-  if (bp.raf) cancelAnimationFrame(bp.raf);
-  bp.raf = requestAnimationFrame(runPhysics);
+function startBubbleLoop() {
+  if (!bp.loop) bp.loop = requestAnimationFrame(runBubbleLoop);
 }
 
 function renderMobileSubjectGrid() {
@@ -163,15 +178,24 @@ function renderSubjectList() {
   const inner = document.getElementById('bubbleInner');
   if (!inner) return;
 
-  const step = 360 / SUBJECTS.length;
-  const half = BUBBLE_SIZE / 2;
+  const cols = 4;
+  const gapX = 68;
+  const gapY = 64;
+  const rows = Math.ceil(SUBJECTS.length / cols);
+  const startX = -(cols - 1) * gapX / 2;
+  const startY = -(rows - 1) * gapY / 2;
 
   inner.innerHTML = SUBJECTS.map((s, i) => {
-    const angle = i * step;
+    const row = Math.floor(i / cols);
+    const col = i % cols;
+    const x = startX + col * gapX + (row % 2 ? gapX / 2 : 0);
+    const y = startY + row * gapY;
     const active = currentSubject?.id === s.id;
     return `<div class="subject-bubble${active ? ' active' : ''}"
       id="bubble-${s.id}"
-      style="top:-${half}px;left:-${half}px;width:${BUBBLE_SIZE}px;height:${BUBBLE_SIZE}px;transform:rotateX(${angle}deg) translateZ(${CAROUSEL_R}px);"
+      style="width:${BUBBLE_SIZE}px;height:${BUBBLE_SIZE}px;"
+      data-x="${x}"
+      data-y="${y}"
       data-subject="${s.id}">
       <span class="bubble-icon">${s.icon}</span>
       <span class="bubble-label">${s.name}</span>
@@ -186,6 +210,7 @@ function renderSubjectList() {
 
   applyCarousel();
   setupBubbleCanvas();
+  startBubbleLoop();
 }
 
 function setupBubbleCanvas() {
@@ -193,69 +218,97 @@ function setupBubbleCanvas() {
   if (!canvas || bp.initialized) return;
   bp.initialized = true;
 
-  const DEG_PER_PX = 0.55;
-
-  canvas.addEventListener('mousedown', e => {
+  function startDrag(x, y) {
     if (bp.raf) cancelAnimationFrame(bp.raf);
     bp.dragging = true; bp.moved = false;
-    bp.startY = e.clientY; bp.prevY = e.clientY; bp.prevT = Date.now();
-    bp.velocity = 0;
-  });
+    bp.startX = x; bp.startY = y; bp.prevX = x; bp.prevY = y; bp.prevT = Date.now();
+    bp.vx = 0; bp.vy = 0;
+  }
 
-  window.addEventListener('mousemove', e => {
+  function dragTo(x, y) {
     if (!bp.dragging) return;
     const now = Date.now();
     const dt = Math.max(1, now - bp.prevT);
-    const dy = e.clientY - bp.prevY;
-    if (Math.abs(e.clientY - bp.startY) > 3) bp.moved = true;
-    bp.velocity = (dy / dt) * DEG_PER_PX * 12;
-    bp.angle += dy * DEG_PER_PX;
-    bp.prevY = e.clientY; bp.prevT = now;
+    const dx = x - bp.prevX;
+    const dy = y - bp.prevY;
+    if (Math.hypot(x - bp.startX, y - bp.startY) > 4) bp.moved = true;
+    bp.vx = (dx / dt) * 16;
+    bp.vy = (dy / dt) * 16;
+    bp.x += dx;
+    bp.y += dy;
+    bp.prevX = x; bp.prevY = y; bp.prevT = now;
     applyCarousel();
-  });
+  }
 
-  window.addEventListener('mouseup', () => {
+  function endDrag() {
     if (!bp.dragging) return;
     bp.dragging = false;
-    startPhysics();
-  });
+    startBubbleLoop();
+  }
+
+  canvas.addEventListener('mousedown', e => startDrag(e.clientX, e.clientY));
+  window.addEventListener('mousemove', e => dragTo(e.clientX, e.clientY));
+  window.addEventListener('mouseup', endDrag);
 
   canvas.addEventListener('touchstart', e => {
     const t = e.touches[0];
-    if (bp.raf) cancelAnimationFrame(bp.raf);
-    bp.dragging = true; bp.moved = false;
-    bp.startY = t.clientY; bp.prevY = t.clientY; bp.prevT = Date.now();
-    bp.velocity = 0;
+    startDrag(t.clientX, t.clientY);
   }, { passive: true });
 
   canvas.addEventListener('touchmove', e => {
-    if (!bp.dragging) return;
     const t = e.touches[0];
-    const now = Date.now();
-    const dt = Math.max(1, now - bp.prevT);
-    const dy = t.clientY - bp.prevY;
-    if (Math.abs(t.clientY - bp.startY) > 3) bp.moved = true;
-    bp.velocity = (dy / dt) * DEG_PER_PX * 12;
-    bp.angle += dy * DEG_PER_PX;
-    bp.prevY = t.clientY; bp.prevT = now;
-    applyCarousel();
+    dragTo(t.clientX, t.clientY);
   }, { passive: true });
 
-  canvas.addEventListener('touchend', () => {
-    if (!bp.dragging) return;
-    bp.dragging = false;
-    startPhysics();
-  });
+  canvas.addEventListener('touchend', endDrag);
+  window.addEventListener('resize', applyCarousel);
 }
 
 function selectSubject(subjectId) {
   currentSubject = SUBJECTS.find(s => s.id === subjectId);
   currentUnit = null; currentTopic = null;
-  document.body.classList.add('subject-selected');
+  bp.vx = 0; bp.vy = 0; bp.dragging = false;
   document.querySelectorAll('.subject-bubble').forEach(el => {
     el.classList.toggle('active', el.dataset.subject === subjectId);
   });
-  showUnitView();
+  collapseSubjectNodes(subjectId, () => {
+    document.body.classList.add('subject-selected');
+    showUnitView();
+  });
+}
+
+function collapseSubjectNodes(subjectId, done) {
+  const bubbles = document.querySelectorAll('.subject-bubble');
+  bp.transitioning = true;
+
+  bubbles.forEach((el, i) => {
+    const active = el.dataset.subject === subjectId;
+    const x = Number(el.dataset.x) + bp.x;
+    const y = Number(el.dataset.y) + bp.y;
+    el.style.transitionDelay = `${Math.min(i * 14, 150)}ms`;
+    el.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${active ? 1.16 : 0.82})`;
+    el.style.opacity = active ? '1' : '0.72';
+  });
+
+  requestAnimationFrame(() => {
+    bubbles.forEach(el => {
+      const active = el.dataset.subject === subjectId;
+      el.classList.add('node-converging');
+      el.style.transform = `translate(-50%, -50%) translate(0px, 0px) scale(${active ? 1.32 : 0.18}) rotate(${active ? 0 : 24}deg)`;
+      el.style.opacity = active ? '1' : '0';
+    });
+  });
+
+  window.setTimeout(() => {
+    bubbles.forEach(el => {
+      el.classList.remove('node-converging');
+      el.style.transitionDelay = '';
+    });
+    bp.x = 0; bp.y = 0;
+    bp.transitioning = false;
+    applyCarousel();
+    done();
+  }, 620);
 }
 
 // ===== Unit view =====
