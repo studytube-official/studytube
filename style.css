@@ -1047,8 +1047,8 @@ header h1 {
   position: relative;
   overflow: hidden;
   background:
-    linear-gradient(90deg, rgba(237,255,249,0.88), rgba(232,255,249,0.62) 42%, rgba(229,250,255,0.46)),
-    linear-gradient(0deg, rgba(235,255,248,0.72), rgba(235,255,248,0.1)),
+    linear-gradient(90deg, rgba(237,255,249,0.72), rgba(232,255,249,0.42) 42%, rgba(229,250,255,0.24)),
+    linear-gradient(0deg, rgba(235,255,248,0.52), rgba(235,255,248,0.04)),
     url("assets/future-school-hero.png");
   background-size: cover;
   background-position: center;
