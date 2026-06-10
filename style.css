@@ -483,6 +483,7 @@ header h1 {
   border: 1.5px solid rgba(100,200,160,0.18);
   border-radius: 20px;
   overflow: hidden;
+  position: relative;
   transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
   box-shadow: 0 4px 20px rgba(0,160,120,0.08), 0 1px 4px rgba(0,0,0,0.04);
 }
@@ -521,6 +522,25 @@ header h1 {
 .video-channel { font-size: 0.76rem; color: rgba(60,120,100,0.5); margin-bottom: 8px; }
 
 .video-note-preview { font-size: 0.76rem; color: #7a6020; background: rgba(255,240,180,0.5); border: 1px solid rgba(200,180,50,0.2); border-radius: 8px; padding: 4px 8px; margin-bottom: 8px; line-height: 1.4; }
+
+.thumb-note-preview {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  z-index: 2;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: rgba(4, 22, 28, 0.68);
+  color: #dffff6;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  box-shadow: 0 0 18px rgba(0,215,255,0.18);
+  backdrop-filter: blur(10px);
+  pointer-events: none;
+}
 
 .video-actions { display: flex; gap: 6px; }
 
@@ -564,6 +584,44 @@ header h1 {
 .list-count { font-size: 0.78rem; color: rgba(60,120,100,0.45); }
 .list-option { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(0,200,160,0.1); font-size: 0.9rem; color: #2a5a4a; }
 .list-option:last-child { border-bottom: none; }
+
+.list-video-grid {
+  align-items: start;
+}
+
+.list-video-card {
+  touch-action: manipulation;
+}
+
+.list-video-card.dragging {
+  opacity: 0.62;
+  transform: scale(0.98);
+  box-shadow: 0 0 0 2px rgba(0,215,255,0.42), 0 18px 48px rgba(0,92,120,0.24);
+}
+
+.list-drag-handle {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 4;
+  min-width: 48px;
+  height: 28px;
+  border: 1px solid rgba(143,255,232,0.58);
+  border-radius: 999px;
+  background: rgba(4, 24, 30, 0.68);
+  color: #dffff7;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  cursor: grab;
+  touch-action: none;
+  box-shadow: 0 0 18px rgba(0,215,255,0.24);
+  backdrop-filter: blur(10px);
+}
+
+.list-drag-handle:active {
+  cursor: grabbing;
+}
 
 /* ===== Buttons ===== */
 .btn-primary-sm {
@@ -900,29 +958,30 @@ header h1 {
 body {
   color: var(--bio-ink);
   background:
-    radial-gradient(circle at 16% 18%, rgba(65,255,190,0.18), transparent 26%),
-    radial-gradient(circle at 82% 10%, rgba(0,215,255,0.2), transparent 28%),
-    linear-gradient(145deg, #eefdf8 0%, #d8f6ff 48%, #e6ffe8 100%);
+    radial-gradient(circle at 16% 18%, rgba(65,255,190,0.16), transparent 26%),
+    radial-gradient(circle at 82% 10%, rgba(0,215,255,0.16), transparent 28%),
+    linear-gradient(145deg, #0f2f35 0%, #123c47 48%, #183c31 100%);
 }
 
 body::before {
   background:
-    linear-gradient(rgba(0,175,170,0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,175,170,0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(240,255,250,0.76), rgba(226,252,255,0.55) 42%, rgba(235,255,239,0.64)),
-    radial-gradient(ellipse 95% 62% at 58% 14%, rgba(232,255,252,0.62), transparent 66%),
+    linear-gradient(rgba(130,255,235,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(130,255,235,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(5,22,28,0.56), rgba(8,42,48,0.26) 44%, rgba(10,34,24,0.48)),
+    radial-gradient(ellipse 95% 62% at 58% 14%, rgba(180,255,244,0.18), transparent 66%),
     url("assets/future-school-hero.png"),
-    linear-gradient(160deg, #f2fff9 0%, #def7ff 48%, #efffec 100%);
+    linear-gradient(160deg, #0b2430 0%, #133a46 48%, #143529 100%);
   background-size: 34px 34px, 34px 34px, auto, auto, cover, auto;
   background-position: top left, top left, center, center, center top, center;
 }
 
 body::after {
   background:
-    radial-gradient(circle 320px at 12% 18%, rgba(53,243,173,0.2), transparent 70%),
-    radial-gradient(circle 420px at 82% 18%, rgba(0,215,255,0.18), transparent 70%),
-    radial-gradient(circle 260px at 70% 82%, rgba(184,255,111,0.16), transparent 70%);
-  mix-blend-mode: screen;
+    radial-gradient(circle 320px at 12% 18%, rgba(53,243,173,0.18), transparent 70%),
+    radial-gradient(circle 420px at 82% 18%, rgba(0,215,255,0.16), transparent 70%),
+    radial-gradient(circle 260px at 70% 82%, rgba(184,255,111,0.12), transparent 70%),
+    linear-gradient(to bottom, rgba(3,18,22,0.18), rgba(3,18,22,0.46));
+  mix-blend-mode: normal;
 }
 
 header {
@@ -1101,9 +1160,9 @@ header h1 {
   #welcomeView.welcome { display: none; }
   body::before {
     background:
-      linear-gradient(rgba(0,175,170,0.055) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,175,170,0.055) 1px, transparent 1px),
-      linear-gradient(145deg, rgba(239,255,250,0.88), rgba(222,250,255,0.72) 46%, rgba(235,255,239,0.78)),
+      linear-gradient(rgba(130,255,235,0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(130,255,235,0.08) 1px, transparent 1px),
+      linear-gradient(145deg, rgba(4,20,26,0.62), rgba(8,39,46,0.34) 46%, rgba(8,31,22,0.56)),
       url("assets/future-school-hero.png");
     background-size: 28px 28px, 28px 28px, auto, cover;
     background-position: top left, top left, center, center top;

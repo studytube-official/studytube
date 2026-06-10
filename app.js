@@ -423,23 +423,32 @@ function renderVideos(items) {
 // ===== Video Card =====
 function videoCard(v, context) {
   const notes = loadNotes();
-  const hasNote = notes[v.id]?.text;
+  const noteText = notes[v.id]?.text || '';
+  const hasNote = Boolean(noteText);
+  const isList = context === 'list';
+  const listAttrs = isList ? ` data-list-id="${escHtml(v._listId || '')}" data-video-id="${escHtml(v.id)}"` : '';
   return `
-    <div class="video-card" id="card-${v.id}">
+    <div class="video-card${isList ? ' list-video-card' : ''}" id="card-${v.id}"${listAttrs}>
+      ${isList ? '<button class="list-drag-handle" type="button" aria-label="順番を変える">DRAG</button>' : ''}
       <div class="video-thumb" onclick="playVideo('${v.id}', '${escAttr(v.title)}', '${escAttr(v.channel)}', '${v.thumb}', '${v.subjectId||''}', '${v.unitId||''}', this)">
         <img src="${v.thumb}" alt="${escHtml(v.title)}" loading="lazy">
+        ${hasNote ? `<div class="thumb-note-preview">MEMO ${escHtml(trimNote(noteText, 34))}</div>` : ''}
         <div class="play-overlay">▶</div>
       </div>
       <div class="video-info">
         <div class="video-title">${escHtml(v.title)}</div>
         <div class="video-channel">${escHtml(v.channel)}</div>
-        ${hasNote ? `<div class="video-note-preview">📝 ${escHtml(notes[v.id].text.slice(0,60))}${notes[v.id].text.length>60?'…':''}</div>` : ''}
+        ${hasNote ? `<div class="video-note-preview">MEMO ${escHtml(trimNote(noteText, 60))}</div>` : ''}
         <div class="video-actions">
           <button class="btn-action btn-memo" onclick="openMemo('${v.id}','${escAttr(v.title)}','${v.thumb}')">📝 メモ</button>
           <button class="btn-action btn-list" onclick="openAddToList(${JSON.stringify(v).replace(/"/g,'&quot;')})">⭐ リスト</button>
         </div>
       </div>
     </div>`;
+}
+
+function trimNote(text, max) {
+  return text.length > max ? `${text.slice(0, max)}...` : text;
 }
 
 function playVideo(id, title, channel, thumb, subjectId, unitId, thumbEl) {
@@ -521,13 +530,78 @@ function renderListsView() {
           <button class="btn-danger-sm" onclick="deleteList('${list.id}')">削除</button>
         </div>
       </div>
-      <div class="video-grid">
+      <div class="video-grid list-video-grid" data-list-id="${escHtml(list.id)}">
         ${list.videos.length
-          ? list.videos.map(v => videoCard(v, 'list')).join('')
+          ? list.videos.map(v => videoCard({ ...v, _listId: list.id }, 'list')).join('')
           : '<p class="empty-msg" style="grid-column:1/-1">動画がありません</p>'}
       </div>
     </div>
   `).join('');
+  setupListDragSort();
+}
+
+let listDragState = null;
+
+function setupListDragSort() {
+  document.querySelectorAll('.list-drag-handle').forEach(handle => {
+    handle.addEventListener('pointerdown', startListDrag);
+  });
+  if (!setupListDragSort.bound) {
+    window.addEventListener('pointermove', moveListDrag);
+    window.addEventListener('pointerup', endListDrag);
+    window.addEventListener('pointercancel', endListDrag);
+    setupListDragSort.bound = true;
+  }
+}
+
+function startListDrag(e) {
+  const card = e.currentTarget.closest('.list-video-card');
+  if (!card) return;
+  listDragState = {
+    card,
+    listId: card.dataset.listId,
+    moved: false,
+    pointerId: e.pointerId
+  };
+  card.classList.add('dragging');
+  e.currentTarget.setPointerCapture(e.pointerId);
+  e.preventDefault();
+}
+
+function moveListDrag(e) {
+  if (!listDragState || listDragState.pointerId !== e.pointerId) return;
+  const target = document.elementFromPoint(e.clientX, e.clientY)?.closest('.list-video-card');
+  if (!target || target === listDragState.card || target.dataset.listId !== listDragState.listId) return;
+
+  listDragState.moved = true;
+  const rect = target.getBoundingClientRect();
+  const useVertical = window.innerWidth < 760 || rect.width > rect.height;
+  const putAfter = useVertical
+    ? e.clientY > rect.top + rect.height / 2
+    : e.clientX > rect.left + rect.width / 2;
+  target.parentElement.insertBefore(listDragState.card, putAfter ? target.nextSibling : target);
+}
+
+function endListDrag(e) {
+  if (!listDragState || listDragState.pointerId !== e.pointerId) return;
+  const { card, listId, moved } = listDragState;
+  card.classList.remove('dragging');
+  if (moved) {
+    persistListOrder(listId);
+    showToast('順番を保存しました');
+  }
+  listDragState = null;
+}
+
+function persistListOrder(listId) {
+  const lists = loadLists();
+  const list = lists.find(l => l.id === listId);
+  if (!list) return;
+  const cards = Array.from(document.querySelectorAll('.list-video-card'))
+    .filter(card => card.dataset.listId === listId);
+  const byId = new Map(list.videos.map(v => [v.id, v]));
+  list.videos = cards.map(card => byId.get(card.dataset.videoId)).filter(Boolean);
+  saveLists(lists);
 }
 
 function openNewListModal(callback) {
@@ -625,17 +699,21 @@ function saveMemoFn() {
   hide('memoModal');
   showToast('メモを保存しました');
   // カードのメモプレビュー更新
-  const card = document.getElementById(`card-${pendingMemoVideoId}`);
-  if (card) {
+  document.querySelectorAll(`[id="card-${pendingMemoVideoId}"]`).forEach(card => {
     const existing = card.querySelector('.video-note-preview');
+    const thumbExisting = card.querySelector('.thumb-note-preview');
     if (text) {
-      const preview = `<div class="video-note-preview">📝 ${escHtml(text.slice(0,60))}${text.length>60?'…':''}</div>`;
+      const preview = `<div class="video-note-preview">MEMO ${escHtml(trimNote(text, 60))}</div>`;
+      const thumbPreview = `<div class="thumb-note-preview">MEMO ${escHtml(trimNote(text, 34))}</div>`;
       if (existing) existing.outerHTML = preview;
       else card.querySelector('.video-channel').insertAdjacentHTML('afterend', preview);
-    } else if (existing) {
-      existing.remove();
+      if (thumbExisting) thumbExisting.outerHTML = thumbPreview;
+      else card.querySelector('.video-thumb').insertAdjacentHTML('beforeend', thumbPreview);
+    } else {
+      if (existing) existing.remove();
+      if (thumbExisting) thumbExisting.remove();
     }
-  }
+  });
 }
 
 // ===== API Key =====
