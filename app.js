@@ -6,17 +6,32 @@ let currentOrder = 'relevance';
 let currentView = 'search'; // search | history | lists
 let pendingAddVideo = null;
 let pendingMemoVideoId = null;
+let authUser = null;
+let authReady = false;
+let authApi = null;
+let syncTimer = null;
+let applyingCloudState = false;
 
 // ===== Storage =====
 const DEFAULT_API_KEY = 'AIzaSyDTKRzs6y3r9eRFuRRgKvv5UypD4AitNv8';
 function getApiKey() { return localStorage.getItem('studytube_apikey') || DEFAULT_API_KEY; }
 
-function loadHistory()   { return JSON.parse(localStorage.getItem('st_history') || '[]'); }
-function saveHistory(d)  { localStorage.setItem('st_history', JSON.stringify(d)); }
-function loadLists()     { return JSON.parse(localStorage.getItem('st_lists') || '[]'); }
-function saveLists(d)    { localStorage.setItem('st_lists', JSON.stringify(d)); }
-function loadNotes()     { return JSON.parse(localStorage.getItem('st_notes') || '{}'); }
-function saveNotes(d)    { localStorage.setItem('st_notes', JSON.stringify(d)); }
+function readJson(key, fallback) {
+  try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
+  catch { return fallback; }
+}
+
+function writeJson(key, value, shouldSync = true) {
+  localStorage.setItem(key, JSON.stringify(value));
+  if (shouldSync) scheduleCloudSync();
+}
+
+function loadHistory()   { return readJson('st_history', []); }
+function saveHistory(d)  { writeJson('st_history', d); }
+function loadLists()     { return readJson('st_lists', []); }
+function saveLists(d)    { writeJson('st_lists', d); }
+function loadNotes()     { return readJson('st_notes', {}); }
+function saveNotes(d)    { writeJson('st_notes', d); }
 
 // ===== Init =====
 function init() {
@@ -38,6 +53,13 @@ function init() {
   document.getElementById('createNewListFromAdd').addEventListener('click', createNewListAndAdd);
   document.getElementById('clearHistoryBtn').addEventListener('click', clearHistory);
   document.getElementById('historySubjectFilter').addEventListener('change', renderHistoryView);
+  document.getElementById('authBtn').addEventListener('click', openAuthModal);
+  document.getElementById('logoutBtn').addEventListener('click', logout);
+  document.getElementById('closeAuthModal').addEventListener('click', () => hide('authModal'));
+  document.getElementById('googleLoginBtn').addEventListener('click', loginWithGoogle);
+  document.getElementById('emailLoginBtn').addEventListener('click', () => loginWithEmail(false));
+  document.getElementById('emailSignupBtn').addEventListener('click', () => loginWithEmail(true));
+  initAuth();
 }
 
 // ===== Navigation =====
@@ -109,6 +131,7 @@ function saveSubjectPositions() {
     };
   });
   localStorage.setItem(subjectPositionKey(), JSON.stringify(positions));
+  scheduleCloudSync();
 }
 
 function applyCarousel() {
@@ -753,6 +776,165 @@ function showToast(msg) {
   document.body.appendChild(t);
   setTimeout(() => t.classList.add('show'), 10);
   setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 2500);
+}
+
+// ===== Auth / Cloud Sync =====
+async function initAuth() {
+  updateAuthUi();
+  const config = window.STUDYTUBE_FIREBASE_CONFIG;
+  if (!config || !config.apiKey || !config.projectId) {
+    setAuthStatus('Firebase設定を入れるとログインと同期が使えます。今はこのブラウザに保存されています。');
+    return;
+  }
+
+  try {
+    const appMod = await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js');
+    const authMod = await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js');
+    const dbMod = await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js');
+    const app = appMod.initializeApp(config);
+    const auth = authMod.getAuth(app);
+    const db = dbMod.getFirestore(app);
+    authApi = { auth, db, authMod, dbMod };
+    authReady = true;
+    authMod.onAuthStateChanged(auth, async user => {
+      authUser = user;
+      updateAuthUi();
+      if (user) {
+        await loadCloudState();
+        scheduleCloudSync();
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    setAuthStatus('ログイン機能の読み込みに失敗しました。通信環境かFirebase設定を確認してください。');
+  }
+}
+
+function openAuthModal() {
+  show('authModal');
+  if (authUser) setAuthStatus(`${authUser.email || 'ログイン中'} として同期中です。`);
+  else if (!authReady) setAuthStatus('Firebase設定を入れるとログインと同期が使えます。今はこのブラウザに保存されています。');
+  else setAuthStatus('ログインすると、マイリスト・メモ・教科の配置をスマホとPCで同期できます。');
+}
+
+function setAuthStatus(text) {
+  const el = document.getElementById('authStatusText');
+  if (el) el.textContent = text;
+}
+
+function updateAuthUi() {
+  const authBtn = document.getElementById('authBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (!authBtn || !logoutBtn) return;
+  if (authUser) {
+    authBtn.textContent = authUser.displayName || authUser.email || '同期中';
+    logoutBtn.classList.remove('hidden');
+    document.body.classList.add('logged-in');
+  } else {
+    authBtn.textContent = 'ログイン';
+    logoutBtn.classList.add('hidden');
+    document.body.classList.remove('logged-in');
+  }
+}
+
+async function loginWithGoogle() {
+  if (!authReady || !authApi) return setAuthStatus('Firebase設定がまだ入っていません。auth-config.js に設定を入れてください。');
+  try {
+    const provider = new authApi.authMod.GoogleAuthProvider();
+    await authApi.authMod.signInWithPopup(authApi.auth, provider);
+    hide('authModal');
+  } catch (err) {
+    console.error(err);
+    setAuthStatus('Googleログインに失敗しました。Firebase側でGoogleログインが有効か確認してください。');
+  }
+}
+
+async function loginWithEmail(isSignup) {
+  if (!authReady || !authApi) return setAuthStatus('Firebase設定がまだ入っていません。auth-config.js に設定を入れてください。');
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  if (!email || password.length < 6) return setAuthStatus('メールアドレスと6文字以上のパスワードを入力してください。');
+  try {
+    if (isSignup) await authApi.authMod.createUserWithEmailAndPassword(authApi.auth, email, password);
+    else await authApi.authMod.signInWithEmailAndPassword(authApi.auth, email, password);
+    hide('authModal');
+  } catch (err) {
+    console.error(err);
+    setAuthStatus(isSignup ? '新規登録に失敗しました。Firebase側でメールログインが有効か確認してください。' : 'ログインに失敗しました。メールアドレスとパスワードを確認してください。');
+  }
+}
+
+async function logout() {
+  if (!authReady || !authApi) return;
+  await authApi.authMod.signOut(authApi.auth);
+  authUser = null;
+  updateAuthUi();
+  showToast('ログアウトしました');
+}
+
+function getLocalState() {
+  return {
+    history: loadHistory(),
+    lists: loadLists(),
+    notes: loadNotes(),
+    subjectPositions: readJson('st_subject_positions', {}),
+    mobileSubjectPositions: readJson('st_subject_positions_mobile', {}),
+    updatedAt: Date.now()
+  };
+}
+
+function applyCloudState(state) {
+  if (!state) return;
+  applyingCloudState = true;
+  if (Array.isArray(state.history)) writeJson('st_history', state.history, false);
+  if (Array.isArray(state.lists)) writeJson('st_lists', state.lists, false);
+  if (state.notes && typeof state.notes === 'object') writeJson('st_notes', state.notes, false);
+  if (state.subjectPositions) writeJson('st_subject_positions', state.subjectPositions, false);
+  if (state.mobileSubjectPositions) writeJson('st_subject_positions_mobile', state.mobileSubjectPositions, false);
+  applyingCloudState = false;
+  renderSubjectList();
+  if (currentView === 'history') renderHistoryView();
+  if (currentView === 'lists') renderListsView();
+}
+
+function userStateDoc() {
+  if (!authApi || !authUser) return null;
+  return authApi.dbMod.doc(authApi.db, 'users', authUser.uid, 'studyTube', 'state');
+}
+
+async function loadCloudState() {
+  const docRef = userStateDoc();
+  if (!docRef) return;
+  try {
+    const snap = await authApi.dbMod.getDoc(docRef);
+    if (snap.exists()) {
+      applyCloudState(snap.data());
+      showToast('クラウドから同期しました');
+    } else {
+      await saveCloudState();
+      showToast('この端末のデータをクラウドに保存しました');
+    }
+  } catch (err) {
+    console.error(err);
+    setAuthStatus('クラウド同期に失敗しました。Firestoreの設定を確認してください。');
+  }
+}
+
+function scheduleCloudSync() {
+  if (applyingCloudState || !authUser || !authApi) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(saveCloudState, 450);
+}
+
+async function saveCloudState() {
+  const docRef = userStateDoc();
+  if (!docRef) return;
+  try {
+    await authApi.dbMod.setDoc(docRef, getLocalState(), { merge: true });
+  } catch (err) {
+    console.error(err);
+    setAuthStatus('クラウド保存に失敗しました。Firestoreの権限設定を確認してください。');
+  }
 }
 
 // ===== Utils =====
