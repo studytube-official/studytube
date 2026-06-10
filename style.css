@@ -824,8 +824,8 @@ header h1 {
   /* Bubble shell: tall, full width */
   .bubble-shell {
     width: 100%;
-    height: min(50dvh, 390px);
-    min-height: 300px;
+    height: calc(100dvh - 104px);
+    min-height: 620px;
     border-radius: 20px;
     max-height: none;
   }
@@ -909,8 +909,8 @@ header h1 {
   .layout { padding: 8px; }
   header { padding: 7px 10px; }
   .bubble-shell {
-    height: min(44dvh, 330px);
-    min-height: 260px;
+    height: calc(100dvh - 104px);
+    min-height: 620px;
   }
 
   .mobile-subject-grid {
@@ -958,29 +958,28 @@ header h1 {
 body {
   color: var(--bio-ink);
   background:
-    radial-gradient(circle at 16% 18%, rgba(65,255,190,0.16), transparent 26%),
-    radial-gradient(circle at 82% 10%, rgba(0,215,255,0.16), transparent 28%),
-    linear-gradient(145deg, #0f2f35 0%, #123c47 48%, #183c31 100%);
+    radial-gradient(circle at 16% 18%, rgba(65,255,190,0.12), transparent 26%),
+    radial-gradient(circle at 82% 10%, rgba(0,215,255,0.12), transparent 28%),
+    linear-gradient(145deg, #d8f4ed 0%, #d7f6ff 48%, #def8df 100%);
 }
 
 body::before {
   background:
     linear-gradient(rgba(130,255,235,0.08) 1px, transparent 1px),
     linear-gradient(90deg, rgba(130,255,235,0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(5,22,28,0.56), rgba(8,42,48,0.26) 44%, rgba(10,34,24,0.48)),
+    linear-gradient(90deg, rgba(234,255,250,0.08), rgba(234,255,255,0.02) 44%, rgba(232,255,238,0.06)),
     radial-gradient(ellipse 95% 62% at 58% 14%, rgba(180,255,244,0.18), transparent 66%),
     url("assets/future-school-hero.png"),
-    linear-gradient(160deg, #0b2430 0%, #133a46 48%, #143529 100%);
+    linear-gradient(160deg, #e7fff8 0%, #dff8ff 48%, #e9ffe7 100%);
   background-size: 34px 34px, 34px 34px, auto, auto, cover, auto;
   background-position: top left, top left, center, center, center top, center;
 }
 
 body::after {
   background:
-    radial-gradient(circle 320px at 12% 18%, rgba(53,243,173,0.18), transparent 70%),
-    radial-gradient(circle 420px at 82% 18%, rgba(0,215,255,0.16), transparent 70%),
-    radial-gradient(circle 260px at 70% 82%, rgba(184,255,111,0.12), transparent 70%),
-    linear-gradient(to bottom, rgba(3,18,22,0.18), rgba(3,18,22,0.46));
+    radial-gradient(circle 320px at 12% 18%, rgba(53,243,173,0.1), transparent 70%),
+    radial-gradient(circle 420px at 82% 18%, rgba(0,215,255,0.1), transparent 70%),
+    radial-gradient(circle 260px at 70% 82%, rgba(184,255,111,0.08), transparent 70%);
   mix-blend-mode: normal;
 }
 
@@ -1112,27 +1111,16 @@ header h1 {
 
 .welcome {
   position: relative;
-  overflow: hidden;
-  background:
-    linear-gradient(90deg, rgba(237,255,249,0.7), rgba(232,255,249,0.45) 42%, rgba(229,250,255,0.28)),
-    linear-gradient(0deg, rgba(235,255,248,0.48), rgba(235,255,248,0.04)),
-    url("assets/future-school-hero.png");
-  background-size: cover;
-  background-position: center;
-  border: 1px solid rgba(0,215,255,0.2);
+  overflow: visible;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .welcome::before {
-  content: "";
-  position: absolute;
-  inset: 20px;
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at 50% 40%, transparent 0 32%, rgba(0,215,255,0.12) 33%, transparent 35%),
-    linear-gradient(90deg, transparent 0 45%, rgba(53,243,173,0.16) 46%, transparent 47% 100%),
-    linear-gradient(transparent 0 48%, rgba(0,215,255,0.12) 49%, transparent 50% 100%);
-  opacity: 0.55;
-  pointer-events: none;
+  display: none;
 }
 
 .welcome-inner {
@@ -1162,7 +1150,7 @@ header h1 {
     background:
       linear-gradient(rgba(130,255,235,0.08) 1px, transparent 1px),
       linear-gradient(90deg, rgba(130,255,235,0.08) 1px, transparent 1px),
-      linear-gradient(145deg, rgba(4,20,26,0.62), rgba(8,39,46,0.34) 46%, rgba(8,31,22,0.56)),
+      linear-gradient(145deg, rgba(235,255,250,0.1), rgba(235,255,255,0.02) 46%, rgba(235,255,238,0.08)),
       url("assets/future-school-hero.png");
     background-size: 28px 28px, 28px 28px, auto, cover;
     background-position: top left, top left, center, center top;

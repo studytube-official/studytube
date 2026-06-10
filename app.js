@@ -71,6 +71,11 @@ function switchView(view) {
 
 // ===== Apple Watch-style subject bubbles =====
 const BUBBLE_SIZE = 76;
+const MOBILE_SUBJECT_LAYOUT = [
+  [-118, -250], [18, -282], [138, -224], [-34, -172],
+  [104, -120], [-142, -92], [-8, -36], [132, 8],
+  [-110, 62], [32, 112], [-146, 194], [112, 216], [-4, 274]
+];
 
 const bp = {
   t: 0,
@@ -84,8 +89,14 @@ const bp = {
   initialized: false
 };
 
+function subjectPositionKey() {
+  return window.matchMedia('(max-width: 768px)').matches
+    ? 'st_subject_positions_mobile'
+    : 'st_subject_positions';
+}
+
 function loadSubjectPositions() {
-  try { return JSON.parse(localStorage.getItem('st_subject_positions') || '{}'); }
+  try { return JSON.parse(localStorage.getItem(subjectPositionKey()) || '{}'); }
   catch { return {}; }
 }
 
@@ -97,7 +108,7 @@ function saveSubjectPositions() {
       y: Number(el.dataset.y) || 0
     };
   });
-  localStorage.setItem('st_subject_positions', JSON.stringify(positions));
+  localStorage.setItem(subjectPositionKey(), JSON.stringify(positions));
 }
 
 function applyCarousel() {
@@ -186,6 +197,7 @@ function renderSubjectList() {
   const inner = document.getElementById('bubbleInner');
   if (!inner) return;
 
+  const isMobile = window.matchMedia('(max-width: 768px)').matches;
   const cols = 4;
   const gapX = 78;
   const gapY = 72;
@@ -197,8 +209,9 @@ function renderSubjectList() {
   inner.innerHTML = SUBJECTS.map((s, i) => {
     const row = Math.floor(i / cols);
     const col = i % cols;
-    const defaultX = startX + col * gapX + (row % 2 ? gapX / 2 : 0);
-    const defaultY = startY + row * gapY;
+    const mobilePoint = MOBILE_SUBJECT_LAYOUT[i % MOBILE_SUBJECT_LAYOUT.length];
+    const defaultX = isMobile ? mobilePoint[0] : startX + col * gapX + (row % 2 ? gapX / 2 : 0);
+    const defaultY = isMobile ? mobilePoint[1] : startY + row * gapY;
     const saved = savedPositions[s.id];
     const x = Number.isFinite(saved?.x) ? saved.x : defaultX;
     const y = Number.isFinite(saved?.y) ? saved.y : defaultY;
