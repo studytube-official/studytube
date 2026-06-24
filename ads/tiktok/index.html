@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyTube TikTok Demo</title>
+  <style>
+    :root {
+      --ink: #073338;
+      --muted: rgba(7, 51, 56, 0.68);
+      --cyan: #00d7ff;
+      --mint: #16e4a8;
+      --lime: #b7ff68;
+      --glass: rgba(239, 255, 251, 0.68);
+      --panel: rgba(245, 255, 252, 0.82);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: #06191d;
+      font-family: Inter, "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+      color: var(--ink);
+    }
+
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .ad-stage {
+      position: relative;
+      width: min(100vw, calc(100vh * 9 / 16));
+      height: min(100vh, calc(100vw * 16 / 9));
+      aspect-ratio: 9 / 16;
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(120, 255, 236, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(120, 255, 236, 0.08) 1px, transparent 1px),
+        radial-gradient(circle at 24% 12%, rgba(22, 228, 168, 0.2), transparent 30%),
+        radial-gradient(circle at 92% 30%, rgba(0, 215, 255, 0.18), transparent 36%),
+        linear-gradient(145deg, rgba(232, 255, 249, 0.4), rgba(238, 255, 250, 0.05)),
+        url("../../assets/future-school-hero.png");
+      background-size: 28px 28px, 28px 28px, auto, auto, auto, cover;
+      background-position: top left, top left, center, center, center, 22% top;
+      box-shadow: 0 0 0 1px rgba(140, 255, 240, 0.25), 0 30px 90px rgba(0, 0, 0, 0.5);
+      isolation: isolate;
+    }
+
+    .ad-stage::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(244, 255, 252, 0.08), rgba(244, 255, 252, 0.34) 42%, rgba(245, 255, 252, 0.72)),
+        radial-gradient(circle at 40% 76%, rgba(255, 255, 255, 0.54), transparent 36%);
+      z-index: -1;
+    }
+
+    .ad-stage::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(125deg, transparent 0 36%, rgba(255, 255, 255, 0.14) 37%, transparent 40%),
+        linear-gradient(64deg, transparent 0 64%, rgba(0, 215, 255, 0.18) 65%, transparent 68%);
+      animation: lightSweep 6s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes lightSweep {
+      0%, 100% { opacity: 0.25; transform: translateX(-4%); }
+      50% { opacity: 0.55; transform: translateX(4%); }
+    }
+
+    .topbar {
+      position: absolute;
+      top: 22px;
+      left: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 20;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      font-size: clamp(24px, 6vw, 34px);
+      font-weight: 900;
+      letter-spacing: 0;
+      color: #00bba8;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.78);
+      flex: 1;
+    }
+
+    .logo-mark {
+      width: 28px;
+      height: 28px;
+      flex: 0 0 auto;
+      background:
+        linear-gradient(90deg, transparent 0 34%, #00bba8 35% 100%),
+        linear-gradient(#00bba8 0 0);
+      background-size: 100% 34%, 68% 34%;
+      background-position: 0 0, 100% 100%;
+      background-repeat: no-repeat;
+      filter: drop-shadow(0 0 12px rgba(0, 215, 255, 0.3));
+    }
+
+    .pill {
+      border: 1px solid rgba(0, 215, 255, 0.28);
+      background: rgba(255, 255, 255, 0.72);
+      color: #0b6770;
+      border-radius: 999px;
+      padding: 9px 13px;
+      font-size: clamp(12px, 3.1vw, 15px);
+      font-weight: 900;
+      box-shadow: 0 8px 20px rgba(0, 156, 164, 0.12);
+      backdrop-filter: blur(18px);
+      white-space: nowrap;
+    }
+
+    .pill.active {
+      color: white;
+      background: linear-gradient(135deg, #00d0a1, #00a4ef);
+      border-color: rgba(255, 255, 255, 0.48);
+    }
+
+    .copy {
+      position: absolute;
+      left: 28px;
+      right: 28px;
+      top: 102px;
+      z-index: 12;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: rgba(236, 255, 250, 0.72);
+      border: 1px solid rgba(0, 215, 255, 0.24);
+      color: #08717b;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 28px rgba(0, 150, 140, 0.12);
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--mint);
+      box-shadow: 0 0 14px var(--mint);
+    }
+
+    h1 {
+      margin: 14px 0 0;
+      max-width: none;
+      font-size: clamp(33px, 8.6vw, 48px);
+      line-height: 1.08;
+      letter-spacing: 0;
+      color: #08383c;
+      text-shadow: 0 2px 0 rgba(255, 255, 255, 0.68);
+      white-space: nowrap;
+    }
+
+    .lead {
+      margin: 13px 0 0;
+      max-width: 21em;
+      color: var(--muted);
+      font-size: clamp(15px, 4vw, 20px);
+      line-height: 1.55;
+      font-weight: 800;
+    }
+
+    .subject-field {
+      position: absolute;
+      inset: 305px 18px auto;
+      height: 300px;
+      z-index: 9;
+      transition: transform 0.65s ease, opacity 0.65s ease;
+    }
+
+    .subject {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: var(--size, 92px);
+      height: var(--size, 92px);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: #0a5961;
+      background:
+        radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.98), rgba(229, 255, 249, 0.92) 44%, rgba(160, 255, 232, 0.78));
+      border: 2px solid rgba(0, 215, 255, 0.35);
+      box-shadow:
+        0 0 28px rgba(0, 215, 255, 0.25),
+        0 16px 34px rgba(0, 126, 132, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+      transform: translate(-50%, -50%) translate3d(0, 0, 0);
+      animation: bubbleFloat var(--dur, 6s) ease-in-out infinite;
+      animation-delay: var(--delay, 0s);
+      transition: transform 0.7s cubic-bezier(0.2, 1, 0.2, 1), opacity 0.45s ease, box-shadow 0.45s ease;
+    }
+
+    .subject::after {
+      content: "";
+      position: absolute;
+      inset: -6px;
+      border-radius: inherit;
+      border: 1px solid rgba(22, 228, 168, 0.32);
+      box-shadow: 0 0 22px rgba(22, 228, 168, 0.22);
+    }
+
+    .subject strong {
+      display: block;
+      font-size: clamp(14px, 3.6vw, 18px);
+      line-height: 1.1;
+    }
+
+    .subject span {
+      display: block;
+      margin-bottom: 4px;
+      font-size: clamp(24px, 6vw, 32px);
+      line-height: 1;
+    }
+
+    .subject.math {
+      --size: 106px;
+    }
+
+    body[data-phase="videos"] .subject:not(.math),
+    body[data-phase="memo"] .subject:not(.math),
+    body[data-phase="sync"] .subject:not(.math) {
+      opacity: 0.28;
+      transform: translate(-50%, -50%) scale(0.78);
+    }
+
+    body[data-phase="videos"] .subject.math,
+    body[data-phase="memo"] .subject.math,
+    body[data-phase="sync"] .subject.math {
+      transform: translate(-50%, -50%) translate(0, -92px) scale(1.12);
+      box-shadow:
+        0 0 46px rgba(22, 228, 168, 0.5),
+        0 20px 44px rgba(0, 126, 132, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    }
+
+    @keyframes bubbleFloat {
+      0%, 100% { margin-top: 0; }
+      50% { margin-top: -12px; }
+    }
+
+    .scan-line {
+      position: absolute;
+      left: 28px;
+      right: 28px;
+      top: 590px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), var(--mint), transparent);
+      filter: drop-shadow(0 0 12px var(--cyan));
+      opacity: 0;
+      z-index: 11;
+    }
+
+    body[data-phase="videos"] .scan-line,
+    body[data-phase="memo"] .scan-line {
+      animation: scan 1.5s ease-in-out infinite;
+      opacity: 1;
+    }
+
+    @keyframes scan {
+      0% { transform: translateY(-60px); opacity: 0; }
+      25%, 75% { opacity: 1; }
+      100% { transform: translateY(80px); opacity: 0; }
+    }
+
+    .video-panel {
+      position: absolute;
+      left: 20px;
+      right: 20px;
+      bottom: 190px;
+      z-index: 14;
+      opacity: 0;
+      transform: translateY(70px) scale(0.96);
+      transition: opacity 0.6s ease, transform 0.65s cubic-bezier(0.2, 1, 0.2, 1);
+    }
+
+    body[data-phase="videos"] .video-panel,
+    body[data-phase="memo"] .video-panel,
+    body[data-phase="sync"] .video-panel {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .search-chip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding: 13px 15px;
+      border-radius: 20px;
+      background: rgba(247, 255, 253, 0.78);
+      border: 1px solid rgba(0, 215, 255, 0.22);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 14px 36px rgba(0, 130, 142, 0.14);
+      font-weight: 900;
+      color: #0a5961;
+    }
+
+    .search-chip span {
+      color: rgba(7, 51, 56, 0.5);
+      font-size: 12px;
+    }
+
+    .video-card {
+      position: relative;
+      display: grid;
+      grid-template-columns: 118px 1fr;
+      gap: 12px;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 22px;
+      background: rgba(249, 255, 253, 0.84);
+      border: 1px solid rgba(0, 215, 255, 0.22);
+      backdrop-filter: blur(22px);
+      box-shadow: 0 16px 38px rgba(0, 90, 100, 0.16);
+      overflow: hidden;
+    }
+
+    .video-card:nth-child(3) {
+      transform: translateX(20px);
+    }
+
+    .video-card:nth-child(4) {
+      transform: translateX(-8px);
+    }
+
+    .thumb {
+      position: relative;
+      height: 72px;
+      border-radius: 16px;
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, var(--a), var(--b)),
+        radial-gradient(circle at 70% 30%, rgba(255, 255, 255, 0.68), transparent 30%);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+    }
+
+    .thumb::before,
+    .thumb::after {
+      content: "";
+      position: absolute;
+      background: rgba(255, 255, 255, 0.54);
+      border-radius: 999px;
+    }
+
+    .thumb::before {
+      width: 72px;
+      height: 4px;
+      left: 16px;
+      top: 20px;
+      box-shadow: 0 16px 0 rgba(255, 255, 255, 0.38), 0 32px 0 rgba(255, 255, 255, 0.28);
+    }
+
+    .thumb::after {
+      width: 34px;
+      height: 34px;
+      right: 12px;
+      top: 19px;
+      background: rgba(255, 255, 255, 0.34);
+      box-shadow: inset 11px 0 0 rgba(255, 255, 255, 0.45);
+    }
+
+    .sample-tag {
+      position: absolute;
+      left: 8px;
+      bottom: 7px;
+      z-index: 1;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: rgba(5, 45, 52, 0.55);
+      color: rgba(255, 255, 255, 0.94);
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+    }
+
+    .video-title {
+      margin: 2px 0 5px;
+      color: #0b3e45;
+      font-size: 15px;
+      line-height: 1.32;
+      font-weight: 900;
+    }
+
+    .video-meta {
+      color: rgba(7, 51, 56, 0.48);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .actions {
+      display: flex;
+      gap: 7px;
+      margin-top: 8px;
+    }
+
+    .action {
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: rgba(0, 215, 255, 0.11);
+      color: #0a6d75;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .action.primary {
+      color: white;
+      background: linear-gradient(135deg, #00cca0, #00a6ee);
+      box-shadow: 0 8px 18px rgba(0, 166, 238, 0.22);
+    }
+
+    .memo-float {
+      position: absolute;
+      right: 18px;
+      bottom: 330px;
+      width: 210px;
+      z-index: 18;
+      padding: 15px 16px;
+      border-radius: 22px;
+      background: rgba(255, 248, 209, 0.9);
+      border: 1px solid rgba(255, 210, 80, 0.45);
+      box-shadow: 0 20px 42px rgba(130, 95, 0, 0.18);
+      color: #7a5c00;
+      font-weight: 900;
+      opacity: 0;
+      transform: translateY(30px) rotate(-3deg) scale(0.88);
+      transition: opacity 0.5s ease, transform 0.55s cubic-bezier(0.2, 1.2, 0.2, 1);
+    }
+
+    body[data-phase="memo"] .memo-float {
+      opacity: 1;
+      transform: translateY(0) rotate(-3deg) scale(1);
+    }
+
+    .memo-float small {
+      display: block;
+      margin-bottom: 5px;
+      color: rgba(122, 92, 0, 0.62);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+    }
+
+    .sync-panel {
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      bottom: 34px;
+      z-index: 24;
+      padding: 18px;
+      border-radius: 28px;
+      background: rgba(244, 255, 252, 0.9);
+      border: 1px solid rgba(0, 215, 255, 0.25);
+      box-shadow: 0 24px 54px rgba(0, 90, 100, 0.18);
+      backdrop-filter: blur(24px);
+      transform: translateY(110px);
+      opacity: 0;
+      transition: opacity 0.6s ease, transform 0.65s cubic-bezier(0.2, 1, 0.2, 1);
+    }
+
+    body[data-phase="sync"] .sync-panel {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .sync-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 13px;
+    }
+
+    .device {
+      position: relative;
+      width: 46px;
+      height: 54px;
+      border-radius: 13px;
+      background: linear-gradient(145deg, #eafffb, #b9fff1);
+      border: 2px solid rgba(0, 215, 255, 0.38);
+      box-shadow: 0 0 22px rgba(0, 215, 255, 0.2);
+    }
+
+    .device::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 5px;
+      width: 13px;
+      height: 3px;
+      border-radius: 999px;
+      background: rgba(6, 85, 92, 0.36);
+      transform: translateX(-50%);
+    }
+
+    .device.pc {
+      width: 66px;
+      height: 44px;
+      border-radius: 10px;
+      margin-left: -3px;
+    }
+
+    .sync-title {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.25;
+      font-weight: 950;
+      color: #073338;
+    }
+
+    .sync-text {
+      margin: 0;
+      color: rgba(7, 51, 56, 0.62);
+      font-size: 13px;
+      line-height: 1.5;
+      font-weight: 800;
+    }
+
+    .cta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(0, 215, 255, 0.16);
+    }
+
+    .cta strong {
+      font-size: 23px;
+      color: #00aaa0;
+      line-height: 1;
+    }
+
+    .cta span {
+      display: block;
+      margin-top: 4px;
+      color: rgba(7, 51, 56, 0.58);
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .cta-button {
+      flex: 0 0 auto;
+      padding: 12px 14px;
+      border-radius: 999px;
+      color: white;
+      background: linear-gradient(135deg, #00c99b, #009fe8);
+      box-shadow: 0 12px 26px rgba(0, 160, 200, 0.28);
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+    .progress {
+      position: absolute;
+      left: 28px;
+      right: 28px;
+      bottom: 16px;
+      z-index: 30;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      opacity: 0.76;
+    }
+
+    .bar {
+      height: 3px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.42);
+    }
+
+    .bar::before {
+      content: "";
+      display: block;
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, var(--mint), var(--cyan));
+    }
+
+    body[data-phase="pick"] .bar:nth-child(1)::before,
+    body[data-phase="videos"] .bar:nth-child(2)::before,
+    body[data-phase="memo"] .bar:nth-child(3)::before,
+    body[data-phase="sync"] .bar:nth-child(4)::before {
+      animation: fillBar 3.8s linear forwards;
+    }
+
+    @keyframes fillBar {
+      from { width: 0; }
+      to { width: 100%; }
+    }
+
+    body[data-phase="sync"] .copy {
+      opacity: 0.1;
+      transform: translateY(-16px);
+    }
+
+    body[data-phase="videos"] .copy,
+    body[data-phase="memo"] .copy {
+      opacity: 0.22;
+      transform: translateY(-12px);
+    }
+
+    body[data-phase="videos"] .subject-field,
+    body[data-phase="memo"] .subject-field,
+    body[data-phase="sync"] .subject-field {
+      transform: translateY(-92px) scale(0.84);
+    }
+
+    @media (max-height: 760px) {
+      .copy { top: 88px; }
+      .subject-field { top: 220px; transform: scale(0.9); transform-origin: top center; }
+      .video-panel { bottom: 150px; }
+      .memo-float { bottom: 285px; }
+      .sync-panel { bottom: 26px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+      }
+    }
+  </style>
+</head>
+<body data-phase="pick">
+  <main class="ad-stage" aria-label="StudyTube TikTok demo">
+    <div class="topbar">
+      <div class="brand"><span class="logo-mark" aria-hidden="true"></span>StudyTube</div>
+      <div class="pill active">検索</div>
+      <div class="pill">マイリスト</div>
+    </div>
+
+    <section class="copy">
+      <div class="eyebrow">受験生の動画学習を整理</div>
+      <h1>教科から、動画へ。</h1>
+      <p class="lead">探す、メモする、あとで見る。学習動画を自分専用のリストにまとめられます。</p>
+    </section>
+
+    <section class="subject-field" aria-label="教科選択デモ">
+      <div class="subject" style="--x: 20%; --y: 24%; --dur: 6.4s; --delay: -0.8s;"><span>国</span><strong>国語</strong></div>
+      <div class="subject math" style="--x: 48%; --y: 20%; --dur: 7.2s; --delay: -1.6s;"><span>∑</span><strong>数学</strong></div>
+      <div class="subject" style="--x: 76%; --y: 25%; --dur: 6.8s; --delay: -2.2s;"><span>A</span><strong>英語</strong></div>
+      <div class="subject" style="--x: 28%; --y: 50%; --dur: 7s; --delay: -1.1s;"><span>Li</span><strong>化学</strong></div>
+      <div class="subject" style="--x: 62%; --y: 50%; --dur: 6.2s; --delay: -2.8s;"><span>地</span><strong>地学</strong></div>
+      <div class="subject" style="--x: 20%; --y: 76%; --dur: 7.5s; --delay: -3.2s;"><span>史</span><strong>日本史</strong></div>
+      <div class="subject" style="--x: 49%; --y: 78%; --dur: 6.6s; --delay: -0.4s;"><span>世</span><strong>世界史</strong></div>
+      <div class="subject" style="--x: 79%; --y: 73%; --dur: 7.8s; --delay: -2.5s;"><span>情</span><strong>情報</strong></div>
+    </section>
+
+    <div class="scan-line" aria-hidden="true"></div>
+
+    <section class="video-panel" aria-label="動画カードデモ">
+      <div class="search-chip">
+        数学II 微分法
+        <span>サンプル検索結果</span>
+      </div>
+      <article class="video-card">
+        <div class="thumb" style="--a:#00b7ff; --b:#7affcf;"><span class="sample-tag">SAMPLE</span></div>
+        <div>
+          <h2 class="video-title">グラフで理解する微分法</h2>
+          <div class="video-meta">サンプル動画 12分</div>
+          <div class="actions"><span class="action">メモ</span><span class="action primary">リスト</span></div>
+        </div>
+      </article>
+      <article class="video-card">
+        <div class="thumb" style="--a:#7e8cff; --b:#b7ff68;"><span class="sample-tag">SAMPLE</span></div>
+        <div>
+          <h2 class="video-title">共通テスト向け 重要パターン</h2>
+          <div class="video-meta">サンプル動画 18分</div>
+          <div class="actions"><span class="action">メモ</span><span class="action">保存済み</span></div>
+        </div>
+      </article>
+    </section>
+
+    <aside class="memo-float">
+      <small>MEMO</small>
+      接線の公式をあとで復習。例題3をもう一度見る。
+    </aside>
+
+    <section class="sync-panel" aria-label="同期とCTA">
+      <div class="sync-row">
+        <div class="device"></div>
+        <div class="device pc"></div>
+        <div>
+          <p class="sync-title">メモもリストも、つづきから。</p>
+          <p class="sync-text">ログインするとスマホとPCで学習リストを同期できます。</p>
+        </div>
+      </div>
+      <div class="cta">
+        <div>
+          <strong>StudyTube</strong>
+          <span>studytube-official.github.io/studytube/</span>
+        </div>
+        <div class="cta-button">今すぐ使う</div>
+      </div>
+    </section>
+
+    <div class="progress" aria-hidden="true">
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+    </div>
+  </main>
+
+  <script>
+    const phases = ["pick", "videos", "memo", "sync"];
+    const fixedPhase = new URLSearchParams(location.search).get("phase");
+    let index = 0;
+    const stepMs = 3800;
+
+    function setPhase() {
+      document.body.dataset.phase = phases[index];
+      index = (index + 1) % phases.length;
+    }
+
+    if (phases.includes(fixedPhase)) {
+      document.body.dataset.phase = fixedPhase;
+    } else {
+      setInterval(setPhase, stepMs);
+    }
+  </script>
+</body>
+</html>
