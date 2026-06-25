@@ -141,8 +141,8 @@
     body[data-phase="units"] .nav-pill:nth-child(1),
     body[data-phase="videos"] .nav-pill:nth-child(1),
     body[data-phase="memo"] .nav-pill:nth-child(1),
-    body[data-phase="list"] .nav-pill:nth-child(3),
-    body[data-phase="sync"] .nav-pill:nth-child(2) {
+    body[data-phase="listOverview"] .nav-pill:nth-child(3),
+    body[data-phase="list"] .nav-pill:nth-child(3) {
       color: #fff;
       background: linear-gradient(135deg, #00cfa2, #00a7ef);
       border-color: rgba(255,255,255,0.5);
@@ -175,8 +175,8 @@
     body[data-phase="units"] .scene.units,
     body[data-phase="videos"] .scene.videos,
     body[data-phase="memo"] .scene.memo,
-    body[data-phase="list"] .scene.list,
-    body[data-phase="sync"] .scene.sync {
+    body[data-phase="listOverview"] .scene.list-overview,
+    body[data-phase="list"] .scene.list {
       opacity: 1;
       transform: translateY(0) scale(1);
       pointer-events: auto;
@@ -296,8 +296,7 @@
     .search-bar,
     .video-card,
     .list-card,
-    .sync-card,
-    .history-card {
+    .folder-card {
       border: 1px solid var(--stroke);
       background: var(--glass);
       box-shadow: var(--shadow);
@@ -638,116 +637,99 @@
       100% { transform: translateY(0); }
     }
 
-    .sync-layout {
+    .overview-layout {
       position: absolute;
-      inset: 18px 14px 0;
-      display: grid;
-      grid-template-rows: auto auto auto;
-      align-content: start;
-      gap: 14px;
+      inset: 20px 14px 0;
     }
 
-    .sync-card {
-      padding: 18px;
-      border-radius: 26px;
-    }
-
-    .devices {
+    .overview-head {
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 18px;
-      padding: 26px 0;
-    }
-
-    .device {
-      position: relative;
-      width: 72px;
-      height: 104px;
-      border-radius: 20px;
-      background: linear-gradient(145deg, #eafffb, #b9fff1);
-      border: 3px solid rgba(0,215,255,0.38);
-      box-shadow: 0 0 28px rgba(0,215,255,0.22);
-    }
-
-    .device.pc {
-      width: 132px;
-      height: 86px;
-      border-radius: 18px;
-    }
-
-    .device::after {
-      content: "";
-      position: absolute;
-      left: 50%;
-      bottom: 8px;
-      width: 18px;
-      height: 4px;
-      border-radius: 999px;
-      background: rgba(6,85,92,0.36);
-      transform: translateX(-50%);
-    }
-
-    .sync-beam {
-      width: 72px;
-      height: 8px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, var(--mint), var(--cyan), var(--mint));
-      background-size: 200% 100%;
-      box-shadow: 0 0 22px rgba(0,215,255,0.4);
-      animation: beam 1.4s linear infinite;
-    }
-
-    @keyframes beam {
-      to { background-position: 200% 0; }
-    }
-
-    .login-button {
-      margin: 4px auto 0;
-      width: 84%;
-      height: 54px;
-      display: grid;
-      place-items: center;
-      border-radius: 999px;
-      color: white;
-      background: linear-gradient(135deg, #00cfa2, #00a7ef);
-      box-shadow: 0 16px 34px rgba(0,160,200,0.24);
-      font-size: 18px;
-      font-weight: 950;
-    }
-
-    .history-card {
-      display: grid;
-      grid-template-columns: 56px 1fr 46px;
-      align-items: center;
-      gap: 12px;
-      min-height: 82px;
-      padding: 13px;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding: 13px 15px;
       border-radius: 22px;
       color: #0b5158;
+      background: var(--glass);
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      font-weight: 950;
+      backdrop-filter: blur(22px);
+    }
+
+    .folder-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .folder-card {
+      min-height: 142px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 10px;
+      padding: 14px;
+      border-radius: 26px;
+      color: #0b5158;
+      transform: translateY(0);
+      opacity: 1;
+      animation: folderFloat 3s ease-in-out infinite;
+      animation-delay: var(--d, 0s);
+    }
+
+    .folder-card.featured {
+      grid-column: span 2;
+      min-height: 124px;
+      grid-template-columns: 58px 1fr auto;
+      grid-template-rows: auto;
+      align-items: center;
+    }
+
+    .folder-icon {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      border-radius: 18px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--a, #00cfa2), var(--b, #00a7ef));
+      font-size: 22px;
+      font-weight: 950;
+      box-shadow: 0 12px 24px rgba(0,160,200,0.16);
+    }
+
+    .folder-name {
+      font-size: 16px;
+      font-weight: 950;
+      line-height: 1.25;
+    }
+
+    .folder-sub {
+      margin-top: 4px;
+      color: rgba(7,52,59,0.54);
+      font-size: 11px;
       font-weight: 900;
     }
 
-    .history-icon {
-      width: 54px;
-      height: 54px;
-      display: grid;
-      place-items: center;
-      border-radius: 18px;
-      color: white;
-      background: linear-gradient(135deg, #00cfa2, #00a7ef);
-      font-size: 24px;
+    .folder-count {
+      justify-self: start;
+      padding: 6px 10px;
+      border-radius: 999px;
+      color: #08717b;
+      background: rgba(0,215,255,0.12);
+      font-size: 12px;
+      font-weight: 950;
     }
 
-    .check {
-      width: 40px;
-      height: 40px;
-      display: grid;
-      place-items: center;
-      border-radius: 50%;
-      color: white;
+    .folder-card.featured .folder-count {
+      justify-self: end;
+      color: #fff;
       background: linear-gradient(135deg, #00cfa2, #00a7ef);
-      font-weight: 950;
+    }
+
+    @keyframes folderFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
     }
 
     .progress {
@@ -781,8 +763,8 @@
     body[data-phase="units"] .bar:nth-child(2)::before,
     body[data-phase="videos"] .bar:nth-child(3)::before,
     body[data-phase="memo"] .bar:nth-child(4)::before,
-    body[data-phase="list"] .bar:nth-child(5)::before,
-    body[data-phase="sync"] .bar:nth-child(6)::before {
+    body[data-phase="listOverview"] .bar:nth-child(5)::before,
+    body[data-phase="list"] .bar:nth-child(6)::before {
       animation: fill 3s linear forwards;
     }
 
@@ -904,9 +886,57 @@
         </div>
       </div>
 
+      <div class="scene list-overview">
+        <div class="overview-layout">
+          <div class="overview-head"><span>マイリスト一覧</span><span class="list-count">12</span></div>
+          <div class="folder-grid">
+            <article class="folder-card featured" style="--d: 0.05s;">
+              <div class="folder-icon" style="--a:#00b7ff; --b:#7affcf;">Σ</div>
+              <div>
+                <div class="folder-name">数学 苦手対策</div>
+                <div class="folder-sub">微分・確率・図形</div>
+              </div>
+              <div class="folder-count">8本</div>
+            </article>
+            <article class="folder-card" style="--d: 0.18s;">
+              <div class="folder-icon" style="--a:#7e8cff; --b:#80eaff;">英</div>
+              <div>
+                <div class="folder-name">英語 長文</div>
+                <div class="folder-sub">読解 / 文法</div>
+              </div>
+              <div class="folder-count">6本</div>
+            </article>
+            <article class="folder-card" style="--d: 0.31s;">
+              <div class="folder-icon" style="--a:#11d4aa; --b:#ffdf72;">理</div>
+              <div>
+                <div class="folder-name">理科基礎</div>
+                <div class="folder-sub">化学 / 生物</div>
+              </div>
+              <div class="folder-count">5本</div>
+            </article>
+            <article class="folder-card" style="--d: 0.44s;">
+              <div class="folder-icon" style="--a:#ff9f7a; --b:#ffd36b;">史</div>
+              <div>
+                <div class="folder-name">日本史 復習</div>
+                <div class="folder-sub">近現代</div>
+              </div>
+              <div class="folder-count">4本</div>
+            </article>
+            <article class="folder-card" style="--d: 0.57s;">
+              <div class="folder-icon" style="--a:#23c4ff; --b:#b9ff6b;">暗</div>
+              <div>
+                <div class="folder-name">暗記直前</div>
+                <div class="folder-sub">試験前チェック</div>
+              </div>
+              <div class="folder-count">7本</div>
+            </article>
+          </div>
+        </div>
+      </div>
+
       <div class="scene list">
         <div class="list-layout">
-          <div class="list-head"><span>マイリスト</span><span class="list-count">3</span></div>
+          <div class="list-head"><span>数学 苦手対策</span><span class="list-count">3</span></div>
           <div class="list-cards">
             <article class="list-card one">
               <div class="drag-handle">↕</div>
@@ -927,28 +957,6 @@
         </div>
       </div>
 
-      <div class="scene sync">
-        <div class="sync-layout">
-          <div class="sync-card">
-            <div class="devices">
-              <div class="device"></div>
-              <div class="sync-beam"></div>
-              <div class="device pc"></div>
-            </div>
-            <div class="login-button">ログイン同期</div>
-          </div>
-          <div class="history-card">
-            <span class="history-icon">履</span>
-            <span>視聴履歴</span>
-            <span class="check">✓</span>
-          </div>
-          <div class="history-card">
-            <span class="history-icon">★</span>
-            <span>保存リスト</span>
-            <span class="check">✓</span>
-          </div>
-        </div>
-      </div>
     </section>
 
     <div class="progress" aria-hidden="true">
@@ -962,7 +970,7 @@
   </main>
 
   <script>
-    const phases = ["subjects", "units", "videos", "memo", "list", "sync"];
+    const phases = ["subjects", "units", "videos", "memo", "listOverview", "list"];
     const fixedPhase = new URLSearchParams(location.search).get("phase");
     let phaseIndex = 0;
     const stepMs = 3000;

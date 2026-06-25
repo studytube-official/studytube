@@ -16,5 +16,5 @@ TikTok広告やCapCut編集用の縦長デモページです。
 - `?phase=units` 単元選択
 - `?phase=videos` 動画検索と保存
 - `?phase=memo` 動画メモ
-- `?phase=list` マイリストと並べ替え
-- `?phase=sync` ログイン同期と履歴
+- `?phase=listOverview` 教科別・苦手別のマイリスト一覧
+- `?phase=list` マイリスト詳細と並べ替え
