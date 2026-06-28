@@ -379,66 +379,183 @@
     .video-card {
       position: relative;
       display: grid;
-      grid-template-columns: 126px 1fr;
-      gap: 12px;
-      min-height: 96px;
-      padding: 10px;
-      border-radius: 24px;
+      grid-template-columns: 150px 1fr;
+      gap: 11px;
+      min-height: 104px;
+      padding: 9px;
+      border-radius: 22px;
       overflow: hidden;
+    }
+
+    .video-card::after {
+      content: "⋮";
+      position: absolute;
+      top: 14px;
+      right: 12px;
+      color: rgba(4, 45, 52, 0.5);
+      font-size: 20px;
+      line-height: 1;
+      font-weight: 900;
     }
 
     .thumb {
       position: relative;
-      height: 76px;
-      border-radius: 16px;
+      height: 84px;
+      border-radius: 13px;
       overflow: hidden;
       background:
-        radial-gradient(circle at 78% 32%, rgba(255,255,255,0.55), transparent 25%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.36)),
+        radial-gradient(circle at 78% 28%, rgba(255,255,255,0.55), transparent 23%),
+        radial-gradient(circle at 17% 74%, rgba(0,0,0,0.28), transparent 26%),
         linear-gradient(135deg, var(--a), var(--b));
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.42);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.28), 0 10px 20px rgba(3, 41, 47, 0.12);
     }
 
     .thumb::before,
     .thumb::after {
       content: "";
       position: absolute;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.52);
+      z-index: 0;
     }
 
     .thumb::before {
-      left: 15px;
-      top: 17px;
-      width: 76px;
-      height: 5px;
-      box-shadow: 0 17px 0 rgba(255,255,255,0.38), 0 34px 0 rgba(255,255,255,0.3);
+      inset: 10px 44px 14px 9px;
+      border-radius: 10px;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.86), rgba(255,255,255,0.22)),
+        repeating-linear-gradient(0deg, rgba(0,0,0,0.12) 0 2px, transparent 2px 10px);
+      opacity: 0.72;
     }
 
     .thumb::after {
-      right: 13px;
-      top: 23px;
-      width: 30px;
-      height: 30px;
-      background: rgba(255,255,255,0.35);
-      box-shadow: inset 10px 0 0 rgba(255,255,255,0.45);
+      right: 9px;
+      top: 12px;
+      width: 35px;
+      height: 48px;
+      border-radius: 10px;
+      background:
+        radial-gradient(circle at 50% 20%, rgba(255,255,255,0.92) 0 8px, transparent 9px),
+        linear-gradient(180deg, rgba(6,42,48,0.82), rgba(6,42,48,0.34));
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.28);
     }
 
-    .fake-tag {
+    .yt-badge,
+    .thumb-title,
+    .thumb-kicker,
+    .thumb-sub,
+    .duration,
+    .thumb-note {
       position: absolute;
+      z-index: 2;
+    }
+
+    .yt-badge {
+      left: 7px;
+      top: 7px;
+      width: 29px;
+      height: 19px;
+      border-radius: 5px;
+      background: #ff0033;
+      box-shadow: 0 7px 16px rgba(160, 0, 22, 0.28);
+    }
+
+    .yt-badge::before {
+      content: "";
+      position: absolute;
+      left: 11px;
+      top: 5px;
+      width: 0;
+      height: 0;
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+      border-left: 8px solid #fff;
+    }
+
+    .thumb-kicker {
+      right: 7px;
+      top: 7px;
+      padding: 3px 6px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.68);
+      color: #fff;
+      font-size: 8px;
+      font-weight: 950;
+      letter-spacing: 0.04em;
+    }
+
+    .thumb-title {
+      left: 8px;
+      bottom: 22px;
+      color: #fff;
+      font-size: 20px;
+      line-height: 0.95;
+      font-weight: 950;
+      letter-spacing: -0.04em;
+      text-shadow: 0 2px 0 rgba(0,0,0,0.46), 0 6px 16px rgba(0,0,0,0.3);
+    }
+
+    .thumb-sub {
       left: 8px;
       bottom: 7px;
-      z-index: 1;
-      padding: 3px 7px;
-      border-radius: 999px;
-      background: rgba(5,45,52,0.52);
-      color: #fff;
-      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 5px;
+      color: #091b1f;
+      background: #fff44f;
+      font-size: 10px;
       font-weight: 950;
-      letter-spacing: 0.05em;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+    }
+
+    .duration {
+      right: 5px;
+      bottom: 5px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: white;
+      background: rgba(0,0,0,0.88);
+      font-size: 9px;
+      font-weight: 850;
+      letter-spacing: 0.01em;
     }
 
     .lines {
       align-self: center;
+      min-width: 0;
+      position: relative;
+    }
+
+    .video-card .lines {
+      padding-left: 31px;
+      padding-right: 11px;
+    }
+
+    .video-card .lines::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 6px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 35% 30%, rgba(255,255,255,0.95) 0 4px, transparent 5px),
+        linear-gradient(135deg, #00cfa2, #00a7ef);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.55), 0 7px 14px rgba(0, 150, 180, 0.22);
+    }
+
+    .video-title {
+      color: #073f46;
+      font-size: 13px;
+      line-height: 1.22;
+      font-weight: 950;
+      letter-spacing: -0.02em;
+    }
+
+    .video-meta {
+      margin-top: 4px;
+      color: rgba(4,45,52,0.55);
+      font-size: 9px;
+      font-weight: 850;
     }
 
     .line {
@@ -535,17 +652,16 @@
     }
 
     .thumb-note {
-      position: absolute;
       left: 8px;
-      right: 8px;
-      bottom: 7px;
-      z-index: 2;
+      top: 31px;
       padding: 4px 7px;
       border-radius: 9px;
       color: #6c5300;
       background: rgba(255, 246, 185, 0.9);
       font-size: 9px;
       font-weight: 950;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.16);
+      transform: rotate(-3deg);
     }
 
     @keyframes notePulse {
@@ -598,6 +714,38 @@
       padding: 10px;
       border-radius: 24px;
       transition: transform 0.5s ease;
+    }
+
+    .list-card .thumb {
+      height: 63px;
+      border-radius: 12px;
+    }
+
+    .list-card .thumb-title {
+      bottom: 18px;
+      font-size: 15px;
+    }
+
+    .list-card .thumb-sub,
+    .list-card .thumb-kicker {
+      display: none;
+    }
+
+    .list-card .yt-badge {
+      transform: scale(0.78);
+      transform-origin: left top;
+    }
+
+    .list-card .duration {
+      font-size: 8px;
+    }
+
+    .list-card .lines {
+      padding-left: 0;
+    }
+
+    .list-card .lines::before {
+      display: none;
     }
 
     .list-card.one {
@@ -840,26 +988,44 @@
           <div class="search-bar"><span class="search-icon">⌕</span><span>数学II　微分法</span></div>
           <div class="video-list">
             <article class="video-card">
-              <div class="thumb" style="--a:#00b7ff; --b:#7affcf;"><span class="fake-tag">SAMPLE</span></div>
+              <div class="thumb yt-thumb" style="--a:#00b7ff; --b:#7affcf;">
+                <span class="yt-badge"></span>
+                <span class="thumb-kicker">頻出</span>
+                <span class="thumb-title">微分<br>攻略</span>
+                <span class="thumb-sub">15分で復習</span>
+                <span class="duration">12:48</span>
+              </div>
               <div class="lines">
-                <div class="line mid"></div>
-                <div class="line short"></div>
+                <div class="video-title">微分法のつまずきを一気に整理</div>
+                <div class="video-meta">StudyTube 数学 • 12万回視聴 • 2日前</div>
                 <div class="actions"><span class="action">メモ</span><span class="action primary">保存</span></div>
               </div>
             </article>
             <article class="video-card">
-              <div class="thumb" style="--a:#7e8cff; --b:#b9ff6b;"><span class="fake-tag">SAMPLE</span></div>
+              <div class="thumb yt-thumb" style="--a:#7e8cff; --b:#b9ff6b;">
+                <span class="yt-badge"></span>
+                <span class="thumb-kicker">定番</span>
+                <span class="thumb-title">接線<br>公式</span>
+                <span class="thumb-sub">例題つき</span>
+                <span class="duration">09:31</span>
+              </div>
               <div class="lines">
-                <div class="line mid"></div>
-                <div class="line short"></div>
+                <div class="video-title">接線の公式をミスらない覚え方</div>
+                <div class="video-meta">受験ラボ • 8.4万回視聴 • 5日前</div>
                 <div class="actions"><span class="action">メモ</span><span class="action">リスト</span></div>
               </div>
             </article>
             <article class="video-card">
-              <div class="thumb" style="--a:#11d4aa; --b:#ffdf72;"><span class="fake-tag">SAMPLE</span></div>
+              <div class="thumb yt-thumb" style="--a:#11d4aa; --b:#ffdf72;">
+                <span class="yt-badge"></span>
+                <span class="thumb-kicker">演習</span>
+                <span class="thumb-title">極限<br>入門</span>
+                <span class="thumb-sub">苦手対策</span>
+                <span class="duration">16:05</span>
+              </div>
               <div class="lines">
-                <div class="line mid"></div>
-                <div class="line short"></div>
+                <div class="video-title">極限から微分につながる考え方</div>
+                <div class="video-meta">高校数学チャンネル • 5.7万回視聴 • 1週間前</div>
                 <div class="actions"><span class="action">メモ</span><span class="action">リスト</span></div>
               </div>
             </article>
@@ -872,13 +1038,17 @@
         <div class="memo-layout">
           <div class="search-bar"><span class="search-icon">✎</span><span>動画メモ</span></div>
           <article class="video-card">
-            <div class="thumb" style="--a:#00b7ff; --b:#7affcf;">
-              <span class="fake-tag">SAMPLE</span>
+            <div class="thumb yt-thumb" style="--a:#00b7ff; --b:#7affcf;">
+              <span class="yt-badge"></span>
+              <span class="thumb-kicker">頻出</span>
+              <span class="thumb-title">微分<br>攻略</span>
+              <span class="thumb-sub">15分で復習</span>
+              <span class="duration">12:48</span>
               <span class="thumb-note">MEMO</span>
             </div>
             <div class="lines">
-              <div class="line mid"></div>
-              <div class="line short"></div>
+              <div class="video-title">微分法のつまずきを一気に整理</div>
+              <div class="video-meta">StudyTube 数学 • メモ付きで保存済み</div>
               <div class="actions"><span class="action primary">メモ済み</span><span class="action">保存</span></div>
             </div>
           </article>
@@ -940,18 +1110,39 @@
           <div class="list-cards">
             <article class="list-card one">
               <div class="drag-handle">↕</div>
-              <div class="thumb" style="--a:#00b7ff; --b:#7affcf;"><span class="fake-tag">SAMPLE</span></div>
-              <div class="lines"><div class="line mid"></div><div class="line short"></div></div>
+              <div class="thumb yt-thumb" style="--a:#00b7ff; --b:#7affcf;">
+                <span class="yt-badge"></span>
+                <span class="thumb-title">微分<br>攻略</span>
+                <span class="duration">12:48</span>
+              </div>
+              <div class="lines">
+                <div class="video-title">微分法のつまずきを一気に整理</div>
+                <div class="video-meta">数学 苦手対策 • 1番目</div>
+              </div>
             </article>
             <article class="list-card two">
               <div class="drag-handle">↕</div>
-              <div class="thumb" style="--a:#7e8cff; --b:#b9ff6b;"><span class="fake-tag">SAMPLE</span></div>
-              <div class="lines"><div class="line mid"></div><div class="line short"></div></div>
+              <div class="thumb yt-thumb" style="--a:#7e8cff; --b:#b9ff6b;">
+                <span class="yt-badge"></span>
+                <span class="thumb-title">接線<br>公式</span>
+                <span class="duration">09:31</span>
+              </div>
+              <div class="lines">
+                <div class="video-title">接線の公式をミスらない覚え方</div>
+                <div class="video-meta">数学 苦手対策 • 2番目</div>
+              </div>
             </article>
             <article class="list-card three">
               <div class="drag-handle">↕</div>
-              <div class="thumb" style="--a:#11d4aa; --b:#ffdf72;"><span class="fake-tag">SAMPLE</span></div>
-              <div class="lines"><div class="line mid"></div><div class="line short"></div></div>
+              <div class="thumb yt-thumb" style="--a:#11d4aa; --b:#ffdf72;">
+                <span class="yt-badge"></span>
+                <span class="thumb-title">極限<br>入門</span>
+                <span class="duration">16:05</span>
+              </div>
+              <div class="lines">
+                <div class="video-title">極限から微分につながる考え方</div>
+                <div class="video-meta">数学 苦手対策 • 3番目</div>
+              </div>
             </article>
           </div>
         </div>
