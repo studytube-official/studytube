@@ -882,10 +882,6 @@ function setAuthBusy(isBusy) {
   updateAuthUi();
 }
 
-function shouldUseRedirectLogin() {
-  return window.matchMedia('(max-width: 768px)').matches || navigator.maxTouchPoints > 0;
-}
-
 function getAuthErrorMessage(err) {
   const code = err?.code || '';
   const host = location.hostname || 'localhost';
@@ -913,10 +909,8 @@ async function loginWithGoogle() {
   try {
     const provider = new authApi.authMod.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
-    if (shouldUseRedirectLogin()) {
-      await authApi.authMod.signInWithRedirect(authApi.auth, provider);
-      return;
-    }
+    // 注意: signInWithRedirect は authDomain(firebaseapp.com) がサイトと別ドメインのため
+    // iOS Safari等のトラッキング防止でセッションが失われる。常にポップアップを優先する。
     try {
       await authApi.authMod.signInWithPopup(authApi.auth, provider);
     } catch (err) {
