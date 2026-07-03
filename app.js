@@ -11,6 +11,7 @@ let authReady = false;
 let authApi = null;
 let syncTimer = null;
 let applyingCloudState = false;
+let authBusy = false;
 
 // ===== Storage =====
 const DEFAULT_API_KEY = 'AIzaSyDTKRzs6y3r9eRFuRRgKvv5UypD4AitNv8';
@@ -59,6 +60,7 @@ function init() {
   document.getElementById('googleLoginBtn').addEventListener('click', loginWithGoogle);
   document.getElementById('emailLoginBtn').addEventListener('click', () => loginWithEmail(false));
   document.getElementById('emailSignupBtn').addEventListener('click', () => loginWithEmail(true));
+  document.getElementById('passwordResetBtn').addEventListener('click', sendPasswordReset);
   initAuth();
 }
 
@@ -779,6 +781,8 @@ function showToast(msg) {
 }
 
 // ===== Auth / Cloud Sync =====
+const FIREBASE_SDK_VERSION = '10.12.5';
+
 async function initAuth() {
   updateAuthUi();
   const config = window.STUDYTUBE_FIREBASE_CONFIG;
@@ -788,20 +792,34 @@ async function initAuth() {
   }
 
   try {
-    const appMod = await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js');
-    const authMod = await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js');
-    const dbMod = await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js');
-    const app = appMod.initializeApp(config);
+    const [appMod, authMod, dbMod] = await Promise.all([
+      import(`https://www.gstatic.com/firebasejs/${FIREBASE_SDK_VERSION}/firebase-app.js`),
+      import(`https://www.gstatic.com/firebasejs/${FIREBASE_SDK_VERSION}/firebase-auth.js`),
+      import(`https://www.gstatic.com/firebasejs/${FIREBASE_SDK_VERSION}/firebase-firestore.js`)
+    ]);
+    const app = appMod.getApps().length ? appMod.getApps()[0] : appMod.initializeApp(config);
     const auth = authMod.getAuth(app);
+    authMod.useDeviceLanguage(auth);
+    await authMod.setPersistence(auth, authMod.browserLocalPersistence);
     const db = dbMod.getFirestore(app);
     authApi = { auth, db, authMod, dbMod };
     authReady = true;
+
+    try {
+      await authMod.getRedirectResult(auth);
+    } catch (err) {
+      console.error(err);
+      setAuthStatus(getAuthErrorMessage(err));
+    }
+
     authMod.onAuthStateChanged(auth, async user => {
       authUser = user;
       updateAuthUi();
       if (user) {
         await loadCloudState();
-        scheduleCloudSync();
+        setAuthStatus(`${user.email || 'ログイン中'} として同期中です。`);
+      } else {
+        setAuthStatus('ログインすると、マイリスト・メモ・教科の配置をスマホとPCで同期できます。');
       }
     });
   } catch (err) {
@@ -826,6 +844,8 @@ function updateAuthUi() {
   const authBtn = document.getElementById('authBtn');
   const logoutBtn = document.getElementById('logoutBtn');
   if (!authBtn || !logoutBtn) return;
+  authBtn.classList.toggle('is-disabled', authBusy);
+  authBtn.classList.toggle('is-syncing', Boolean(authUser));
   if (authUser) {
     authBtn.textContent = authUser.displayName || authUser.email || '同期中';
     logoutBtn.classList.remove('hidden');
@@ -837,15 +857,67 @@ function updateAuthUi() {
   }
 }
 
+function setAuthBusy(isBusy) {
+  authBusy = isBusy;
+  ['googleLoginBtn', 'emailLoginBtn', 'emailSignupBtn', 'passwordResetBtn', 'logoutBtn'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = isBusy;
+  });
+  updateAuthUi();
+}
+
+function shouldUseRedirectLogin() {
+  return window.matchMedia('(max-width: 768px)').matches || navigator.maxTouchPoints > 0;
+}
+
+function getAuthErrorMessage(err) {
+  const code = err?.code || '';
+  const host = location.hostname || 'localhost';
+  const messages = {
+    'auth/operation-not-allowed': 'Firebase Consoleでこのログイン方法を有効にしてください。',
+    'auth/unauthorized-domain': `Firebase Authenticationの承認済みドメインに「${host}」を追加してください。`,
+    'auth/popup-blocked': 'ポップアップがブロックされました。もう一度押すと別画面でログインします。',
+    'auth/popup-closed-by-user': 'ログイン画面が閉じられました。もう一度試してください。',
+    'auth/cancelled-popup-request': '別のログイン操作が進行中です。少し待ってからもう一度試してください。',
+    'auth/invalid-email': 'メールアドレスの形式を確認してください。',
+    'auth/user-not-found': 'このメールアドレスのアカウントはまだありません。新規登録してください。',
+    'auth/wrong-password': 'パスワードを確認してください。',
+    'auth/invalid-credential': 'メールアドレスかパスワードを確認してください。',
+    'auth/email-already-in-use': 'このメールアドレスはすでに登録されています。ログインを試してください。',
+    'auth/weak-password': 'パスワードは6文字以上にしてください。',
+    'auth/network-request-failed': '通信に失敗しました。ネットワークを確認してください。'
+  };
+  return messages[code] || 'ログイン処理に失敗しました。Firebase設定と通信環境を確認してください。';
+}
+
 async function loginWithGoogle() {
   if (!authReady || !authApi) return setAuthStatus('Firebase設定がまだ入っていません。auth-config.js に設定を入れてください。');
+  setAuthBusy(true);
+  setAuthStatus('Googleログインを開いています...');
   try {
     const provider = new authApi.authMod.GoogleAuthProvider();
-    await authApi.authMod.signInWithPopup(authApi.auth, provider);
+    provider.setCustomParameters({ prompt: 'select_account' });
+    if (shouldUseRedirectLogin()) {
+      await authApi.authMod.signInWithRedirect(authApi.auth, provider);
+      return;
+    }
+    try {
+      await authApi.authMod.signInWithPopup(authApi.auth, provider);
+    } catch (err) {
+      if (err?.code === 'auth/popup-blocked' || err?.code === 'auth/operation-not-supported-in-this-environment') {
+        setAuthStatus('ポップアップが使えないため、別画面でログインします...');
+        await authApi.authMod.signInWithRedirect(authApi.auth, provider);
+        return;
+      }
+      throw err;
+    }
     hide('authModal');
+    showToast('ログインしました');
   } catch (err) {
     console.error(err);
-    setAuthStatus('Googleログインに失敗しました。Firebase側でGoogleログインが有効か確認してください。');
+    setAuthStatus(getAuthErrorMessage(err));
+  } finally {
+    setAuthBusy(false);
   }
 }
 
@@ -854,22 +926,49 @@ async function loginWithEmail(isSignup) {
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
   if (!email || password.length < 6) return setAuthStatus('メールアドレスと6文字以上のパスワードを入力してください。');
+  setAuthBusy(true);
+  setAuthStatus(isSignup ? '新規登録しています...' : 'ログインしています...');
   try {
     if (isSignup) await authApi.authMod.createUserWithEmailAndPassword(authApi.auth, email, password);
     else await authApi.authMod.signInWithEmailAndPassword(authApi.auth, email, password);
     hide('authModal');
+    showToast(isSignup ? '登録して同期を開始しました' : 'ログインしました');
   } catch (err) {
     console.error(err);
-    setAuthStatus(isSignup ? '新規登録に失敗しました。Firebase側でメールログインが有効か確認してください。' : 'ログインに失敗しました。メールアドレスとパスワードを確認してください。');
+    setAuthStatus(getAuthErrorMessage(err));
+  } finally {
+    setAuthBusy(false);
+  }
+}
+
+async function sendPasswordReset() {
+  if (!authReady || !authApi) return setAuthStatus('Firebase設定がまだ入っていません。auth-config.js に設定を入れてください。');
+  const email = document.getElementById('authEmail').value.trim();
+  if (!email) return setAuthStatus('パスワード再設定用のメールアドレスを入力してください。');
+  setAuthBusy(true);
+  try {
+    await authApi.authMod.sendPasswordResetEmail(authApi.auth, email);
+    setAuthStatus('パスワード再設定メールを送信しました。メールを確認してください。');
+  } catch (err) {
+    console.error(err);
+    setAuthStatus(getAuthErrorMessage(err));
+  } finally {
+    setAuthBusy(false);
   }
 }
 
 async function logout() {
   if (!authReady || !authApi) return;
-  await authApi.authMod.signOut(authApi.auth);
-  authUser = null;
-  updateAuthUi();
-  showToast('ログアウトしました');
+  setAuthBusy(true);
+  try {
+    await authApi.authMod.signOut(authApi.auth);
+    authUser = null;
+    updateAuthUi();
+    setAuthStatus('ログアウトしました。この端末にはデータが残っています。');
+    showToast('ログアウトしました');
+  } finally {
+    setAuthBusy(false);
+  }
 }
 
 function getLocalState() {
@@ -897,6 +996,65 @@ function applyCloudState(state) {
   if (currentView === 'lists') renderListsView();
 }
 
+function mergeUniqueVideos(cloudVideos = [], localVideos = []) {
+  const seen = new Set();
+  return [...cloudVideos, ...localVideos].filter(video => {
+    if (!video || !video.id || seen.has(video.id)) return false;
+    seen.add(video.id);
+    return true;
+  });
+}
+
+function mergeLists(cloudLists = [], localLists = []) {
+  const byId = new Map();
+  [...cloudLists, ...localLists].forEach(list => {
+    if (!list || !list.id) return;
+    const existing = byId.get(list.id);
+    if (!existing) {
+      byId.set(list.id, {
+        ...list,
+        videos: Array.isArray(list.videos) ? mergeUniqueVideos(list.videos, []) : []
+      });
+      return;
+    }
+    existing.name = list.name || existing.name;
+    existing.videos = mergeUniqueVideos(existing.videos, Array.isArray(list.videos) ? list.videos : []);
+  });
+  return Array.from(byId.values());
+}
+
+function mergeHistory(cloudHistory = [], localHistory = []) {
+  const byKey = new Map();
+  [...cloudHistory, ...localHistory].forEach(item => {
+    if (!item || !item.id) return;
+    const key = `${item.id}:${item.watchedAt || ''}`;
+    byKey.set(key, item);
+  });
+  return Array.from(byKey.values())
+    .sort((a, b) => (b.watchedAt || 0) - (a.watchedAt || 0))
+    .slice(0, 200);
+}
+
+function mergeNotes(cloudNotes = {}, localNotes = {}) {
+  const merged = { ...cloudNotes };
+  Object.entries(localNotes || {}).forEach(([videoId, note]) => {
+    const cloudNote = merged[videoId];
+    if (!cloudNote || (note?.updatedAt || 0) >= (cloudNote?.updatedAt || 0)) merged[videoId] = note;
+  });
+  return merged;
+}
+
+function mergeStudyState(cloudState = {}, localState = {}) {
+  return {
+    history: mergeHistory(cloudState.history, localState.history),
+    lists: mergeLists(cloudState.lists, localState.lists),
+    notes: mergeNotes(cloudState.notes, localState.notes),
+    subjectPositions: { ...(cloudState.subjectPositions || {}), ...(localState.subjectPositions || {}) },
+    mobileSubjectPositions: { ...(cloudState.mobileSubjectPositions || {}), ...(localState.mobileSubjectPositions || {}) },
+    updatedAt: Date.now()
+  };
+}
+
 function userStateDoc() {
   if (!authApi || !authUser) return null;
   return authApi.dbMod.doc(authApi.db, 'users', authUser.uid, 'studyTube', 'state');
@@ -908,8 +1066,10 @@ async function loadCloudState() {
   try {
     const snap = await authApi.dbMod.getDoc(docRef);
     if (snap.exists()) {
-      applyCloudState(snap.data());
-      showToast('クラウドから同期しました');
+      const merged = mergeStudyState(snap.data(), getLocalState());
+      applyCloudState(merged);
+      await saveCloudState(merged);
+      showToast('クラウドとこの端末を同期しました');
     } else {
       await saveCloudState();
       showToast('この端末のデータをクラウドに保存しました');
@@ -926,11 +1086,13 @@ function scheduleCloudSync() {
   syncTimer = setTimeout(saveCloudState, 450);
 }
 
-async function saveCloudState() {
+async function saveCloudState(state = getLocalState()) {
   const docRef = userStateDoc();
   if (!docRef) return;
+  updateAuthUi();
   try {
-    await authApi.dbMod.setDoc(docRef, getLocalState(), { merge: true });
+    await authApi.dbMod.setDoc(docRef, state, { merge: true });
+    setAuthStatus(`${authUser.email || 'ログイン中'} として同期中です。`);
   } catch (err) {
     console.error(err);
     setAuthStatus('クラウド保存に失敗しました。Firestoreの権限設定を確認してください。');

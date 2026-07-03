@@ -1,12 +1,8 @@
-// Firebaseを使う場合は、Firebase ConsoleのWebアプリ設定をここに貼り付けます。
-// 設定を入れると、Googleログイン/メールログインとクラウド同期が有効になります。
-// 例:
-// window.STUDYTUBE_FIREBASE_CONFIG = {
-//   apiKey: "...",
-//   authDomain: "...firebaseapp.com",
-//   projectId: "...",
-//   storageBucket: "...appspot.com",
-//   messagingSenderId: "...",
-//   appId: "..."
-// };
-window.STUDYTUBE_FIREBASE_CONFIG = null;
+window.STUDYTUBE_FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBRKLhElDi8G9xHgnd43NrKYXXnwXkgzBM",
+  authDomain: "studytube-official.firebaseapp.com",
+  projectId: "studytube-official",
+  storageBucket: "studytube-official.firebasestorage.app",
+  messagingSenderId: "306861725991",
+  appId: "1:306861725991:web:ca08444b9cab7db32f3102"
+};
