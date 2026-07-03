@@ -55,6 +55,7 @@ function init() {
   document.getElementById('clearHistoryBtn').addEventListener('click', clearHistory);
   document.getElementById('historySubjectFilter').addEventListener('change', renderHistoryView);
   document.getElementById('authBtn').addEventListener('click', openAuthModal);
+  document.getElementById('accountChip')?.addEventListener('click', openAuthModal);
   document.getElementById('logoutBtn').addEventListener('click', logout);
   document.getElementById('closeAuthModal').addEventListener('click', () => hide('authModal'));
   document.getElementById('googleLoginBtn').addEventListener('click', loginWithGoogle);
@@ -843,15 +844,30 @@ function setAuthStatus(text) {
 function updateAuthUi() {
   const authBtn = document.getElementById('authBtn');
   const logoutBtn = document.getElementById('logoutBtn');
+  const chip = document.getElementById('accountChip');
+  const avatar = document.getElementById('accountAvatar');
+  const nameEl = document.getElementById('accountName');
   if (!authBtn || !logoutBtn) return;
   authBtn.classList.toggle('is-disabled', authBusy);
-  authBtn.classList.toggle('is-syncing', Boolean(authUser));
   if (authUser) {
-    authBtn.textContent = authUser.displayName || authUser.email || '同期中';
+    const label = authUser.displayName || (authUser.email ? authUser.email.split('@')[0] : '同期中');
+    // ログインボタンはアカウントチップに置き換える
+    authBtn.classList.add('hidden');
+    if (chip && avatar && nameEl) {
+      nameEl.textContent = label;
+      if (authUser.photoURL) {
+        avatar.innerHTML = `<img src="${authUser.photoURL}" alt="" referrerpolicy="no-referrer">`;
+      } else {
+        avatar.textContent = label.charAt(0).toUpperCase();
+      }
+      chip.classList.remove('hidden');
+    }
     logoutBtn.classList.remove('hidden');
     document.body.classList.add('logged-in');
   } else {
     authBtn.textContent = 'ログイン';
+    authBtn.classList.remove('hidden');
+    if (chip) chip.classList.add('hidden');
     logoutBtn.classList.add('hidden');
     document.body.classList.remove('logged-in');
   }

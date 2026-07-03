@@ -134,6 +134,57 @@ header h1 {
   box-shadow: 0 8px 20px rgba(0,160,120,0.16);
 }
 
+/* ===== Account chip (ログイン後のアカウント欄) ===== */
+.account-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255,255,255,0.82);
+  border: 1.5px solid rgba(0,200,160,0.35);
+  padding: 4px 12px 4px 4px;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,160,120,0.12);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.account-chip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,160,120,0.18);
+}
+
+.account-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #00c896, #0090e0);
+  color: white;
+  font-size: 0.78rem;
+  font-weight: 700;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.account-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.account-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #11616b;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ===== Layout ===== */
 .layout {
   display: flex;
