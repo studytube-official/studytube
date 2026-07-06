@@ -811,6 +811,75 @@ header h1 {
 .btn-secondary { background: rgba(240,252,248,0.9); color: #3a7a6a; border: 1.5px solid rgba(100,200,160,0.25); padding: 9px 24px; border-radius: 100px; cursor: pointer; font-weight: 500; font-size: 0.88rem; transition: all 0.2s; }
 .btn-secondary:hover { background: rgba(220,248,240,0.95); transform: translateY(-1px); }
 
+/* ===== ホーム画面追加バナー (A2HS) ===== */
+.a2hs-banner {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1.5px solid rgba(0,200,160,0.35);
+  border-radius: 18px;
+  box-shadow: 0 12px 40px rgba(0,120,90,0.25), 0 2px 8px rgba(0,0,0,0.08);
+  animation: a2hsIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes a2hsIn {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.a2hs-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  flex-shrink: 0;
+  box-shadow: 0 3px 10px rgba(0,150,120,0.3);
+}
+
+.a2hs-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.a2hs-text strong { font-size: 0.86rem; color: #1a4a3a; }
+.a2hs-text span { font-size: 0.74rem; color: rgba(40,100,80,0.75); line-height: 1.45; }
+
+.a2hs-btn {
+  background: linear-gradient(135deg, #00c896, #0090e0);
+  color: white;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 100px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(0,180,140,0.35);
+  flex-shrink: 0;
+}
+
+.a2hs-close {
+  background: none;
+  border: none;
+  color: rgba(60,120,100,0.55);
+  font-size: 0.95rem;
+  cursor: pointer;
+  padding: 6px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
 /* ===== Toast ===== */
 .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(255,255,255,0.9); backdrop-filter: blur(16px); border: 1.5px solid rgba(0,200,160,0.3); color: #00a878; padding: 10px 24px; border-radius: 100px; font-size: 0.88rem; font-weight: 500; opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 300; white-space: nowrap; box-shadow: 0 8px 32px rgba(0,160,120,0.2); }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }

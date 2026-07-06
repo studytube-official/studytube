@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ManaCue - 受験生のための動画学習</title>
 
+  <!-- PWA / ホーム画面追加用 -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#00a878">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <meta name="apple-mobile-web-app-title" content="ManaCue">
+
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-02RE0K5Q9F"></script>
   <script>
@@ -114,6 +121,17 @@
     </main>
   </div>
 
+  <!-- ホーム画面追加の誘導バナー -->
+  <div id="a2hsBanner" class="a2hs-banner hidden">
+    <img src="icons/icon-192.png" class="a2hs-icon" alt="ManaCue">
+    <div class="a2hs-text">
+      <strong>ホーム画面に追加しよう</strong>
+      <span id="a2hsSteps">ワンタップでアプリみたいに開けます</span>
+    </div>
+    <button id="a2hsAction" class="a2hs-btn hidden" type="button">追加</button>
+    <button id="a2hsClose" class="a2hs-close" type="button" aria-label="閉じる">✕</button>
+  </div>
+
   <!-- ログインモーダル -->
   <div id="authModal" class="modal hidden">
     <div class="modal-box auth-modal-box">
@@ -189,8 +207,8 @@
     </div>
   </div>
 
-  <script src="data.js?v=20260704c"></script>
-<script src="auth-config.js?v=20260704c"></script>
-<script src="app.js?v=20260704c"></script>
+  <script src="data.js?v=20260706a"></script>
+<script src="auth-config.js?v=20260706a"></script>
+<script src="app.js?v=20260706a"></script>
 </body>
 </html>

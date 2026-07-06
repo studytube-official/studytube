@@ -39,6 +39,7 @@ function init() {
   renderSubjectList();
   renderMobileSubjectGrid();
   bindNav();
+  initA2HS();
   document.getElementById('searchBtn').addEventListener('click', doSearch);
   document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
   document.getElementById('orderSelect').addEventListener('change', e => { currentOrder = e.target.value; doSearch(); });
@@ -779,6 +780,55 @@ function showToast(msg) {
   document.body.appendChild(t);
   setTimeout(() => t.classList.add('show'), 10);
   setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 2500);
+}
+
+// ===== ホーム画面追加(A2HS)誘導 =====
+let deferredInstallPrompt = null;
+
+function isStandaloneMode() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function initA2HS() {
+  const banner = document.getElementById('a2hsBanner');
+  if (!banner) return;
+
+  // Androidのインストールプロンプトは表示可否に関わらず先に捕まえておく
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    const btn = document.getElementById('a2hsAction');
+    const steps = document.getElementById('a2hsSteps');
+    if (btn) btn.classList.remove('hidden');
+    if (steps) steps.textContent = 'ワンタップでアプリのように使えます';
+  });
+
+  const isMobile = window.matchMedia('(max-width: 768px)').matches || navigator.maxTouchPoints > 0;
+  if (localStorage.getItem('mc_a2hs_dismissed') || isStandaloneMode() || !isMobile) return;
+
+  const steps = document.getElementById('a2hsSteps');
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  if (ios && steps) {
+    steps.textContent = 'Safariの共有ボタン(□↑) →「ホーム画面に追加」';
+  } else if (steps) {
+    steps.textContent = 'ブラウザのメニュー(⋮) →「ホーム画面に追加」';
+  }
+
+  document.getElementById('a2hsAction')?.addEventListener('click', async () => {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    hideA2HS(true);
+  });
+  document.getElementById('a2hsClose')?.addEventListener('click', () => hideA2HS(true));
+
+  setTimeout(() => banner.classList.remove('hidden'), 2500);
+}
+
+function hideA2HS(remember) {
+  document.getElementById('a2hsBanner')?.classList.add('hidden');
+  if (remember) localStorage.setItem('mc_a2hs_dismissed', String(Date.now()));
 }
 
 // ===== Auth / Cloud Sync =====

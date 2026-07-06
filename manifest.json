@@ -1,0 +1,24 @@
+{
+  "name": "ManaCue - 受験生のための動画学習",
+  "short_name": "ManaCue",
+  "description": "教科と単元を選ぶだけで、受験に役立つ授業動画がすぐ見つかる",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#e8f4f0",
+  "theme_color": "#00a878",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
