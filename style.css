@@ -811,6 +811,29 @@ header h1 {
 .btn-secondary { background: rgba(240,252,248,0.9); color: #3a7a6a; border: 1.5px solid rgba(100,200,160,0.25); padding: 9px 24px; border-radius: 100px; cursor: pointer; font-weight: 500; font-size: 0.88rem; transition: all 0.2s; }
 .btn-secondary:hover { background: rgba(220,248,240,0.95); transform: translateY(-1px); }
 
+/* ===== ご意見モーダル ===== */
+.modal-box select {
+  width: 100%;
+  padding: 10px 16px;
+  background: rgba(240,252,248,0.8);
+  border: 1.5px solid rgba(100,200,160,0.3);
+  border-radius: 14px;
+  font-size: 0.9rem;
+  color: #1a3a2a;
+  margin-bottom: 12px;
+  outline: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.feedback-status {
+  font-size: 0.82rem;
+  margin-bottom: 10px;
+  color: #00a878;
+}
+
+.feedback-status.is-error { color: #c03030; }
+
 /* ===== ホーム画面追加バナー (A2HS) ===== */
 .a2hs-banner {
   position: fixed;

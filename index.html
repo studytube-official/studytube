@@ -31,6 +31,7 @@
         <button class="nav-btn active" data-view="search">🔍 検索</button>
         <button class="nav-btn" data-view="history">📺 履歴</button>
   <button class="nav-btn" data-view="lists">⭐ マイリスト</button>
+        <button class="nav-btn" id="feedbackBtn" type="button">💬 ご意見</button>
       </nav>
       <div class="auth-area">
         <button id="authBtn" class="auth-btn">ログイン</button>
@@ -132,6 +133,28 @@
     <button id="a2hsClose" class="a2hs-close" type="button" aria-label="閉じる">✕</button>
   </div>
 
+  <!-- ご意見・リクエストモーダル -->
+  <div id="feedbackModal" class="modal hidden">
+    <div class="modal-box">
+      <h3>💬 ご意見・リクエスト</h3>
+      <p style="font-size:0.85rem;color:#718096;margin-bottom:12px">
+        「こんな機能がほしい」「ここが使いにくい」など、なんでも気軽に送ってください。開発者が全部読みます！
+      </p>
+      <select id="feedbackCategory">
+        <option value="要望">✨ こんな機能がほしい</option>
+        <option value="不具合">🐛 うまく動かない</option>
+        <option value="感想">💚 感想・応援</option>
+        <option value="その他">📝 その他</option>
+      </select>
+      <textarea id="feedbackText" placeholder="例：世界史の単元をもっと細かく分けてほしい！" rows="5" maxlength="2000"></textarea>
+      <p id="feedbackStatus" class="feedback-status hidden"></p>
+      <div class="modal-btns">
+        <button id="sendFeedback" class="btn-primary">送信</button>
+        <button id="closeFeedback" class="btn-secondary">閉じる</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ログインモーダル -->
   <div id="authModal" class="modal hidden">
     <div class="modal-box auth-modal-box">
@@ -207,8 +230,8 @@
     </div>
   </div>
 
-  <script src="data.js?v=20260706a"></script>
-<script src="auth-config.js?v=20260706a"></script>
-<script src="app.js?v=20260706a"></script>
+  <script src="data.js?v=20260706b"></script>
+<script src="auth-config.js?v=20260706b"></script>
+<script src="app.js?v=20260706b"></script>
 </body>
 </html>

@@ -58,6 +58,9 @@ function init() {
   document.getElementById('authBtn').addEventListener('click', openAuthModal);
   document.getElementById('accountChip')?.addEventListener('click', openAuthModal);
   document.getElementById('logoutBtn').addEventListener('click', logout);
+  document.getElementById('feedbackBtn')?.addEventListener('click', openFeedbackModal);
+  document.getElementById('sendFeedback')?.addEventListener('click', sendFeedbackFn);
+  document.getElementById('closeFeedback')?.addEventListener('click', () => hide('feedbackModal'));
   document.getElementById('closeAuthModal').addEventListener('click', () => hide('authModal'));
   document.getElementById('googleLoginBtn').addEventListener('click', loginWithGoogle);
   document.getElementById('emailLoginBtn').addEventListener('click', () => loginWithEmail(false));
@@ -780,6 +783,52 @@ function showToast(msg) {
   document.body.appendChild(t);
   setTimeout(() => t.classList.add('show'), 10);
   setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 2500);
+}
+
+// ===== ご意見・リクエスト =====
+function openFeedbackModal() {
+  const status = document.getElementById('feedbackStatus');
+  status.classList.add('hidden');
+  status.classList.remove('is-error');
+  show('feedbackModal');
+  document.getElementById('feedbackText').focus();
+}
+
+function setFeedbackStatus(msg, isError) {
+  const status = document.getElementById('feedbackStatus');
+  status.textContent = msg;
+  status.classList.toggle('is-error', Boolean(isError));
+  status.classList.remove('hidden');
+}
+
+async function sendFeedbackFn() {
+  const text = document.getElementById('feedbackText').value.trim();
+  const category = document.getElementById('feedbackCategory').value;
+  if (!text) return setFeedbackStatus('内容を入力してください。', true);
+  if (!authReady || !authApi) return setFeedbackStatus('送信機能の準備中です。少し待ってからもう一度お試しください。', true);
+
+  const btn = document.getElementById('sendFeedback');
+  btn.disabled = true;
+  setFeedbackStatus('送信しています...');
+  try {
+    await authApi.dbMod.addDoc(authApi.dbMod.collection(authApi.db, 'feedback'), {
+      text,
+      category,
+      createdAt: authApi.dbMod.serverTimestamp(),
+      uid: authUser?.uid || null,
+      email: authUser?.email || null,
+      ua: navigator.userAgent,
+      standalone: isStandaloneMode()
+    });
+    document.getElementById('feedbackText').value = '';
+    hide('feedbackModal');
+    showToast('送信しました！ありがとう🙌');
+  } catch (err) {
+    console.error(err);
+    setFeedbackStatus('送信に失敗しました。通信環境を確認してもう一度お試しください。', true);
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 // ===== ホーム画面追加(A2HS)誘導 =====
