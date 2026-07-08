@@ -834,6 +834,48 @@ header h1 {
 
 .feedback-status.is-error { color: #c03030; }
 
+/* ===== 受信箱（開発者用） ===== */
+.inbox-box {
+  max-width: 560px;
+  max-height: 82vh;
+  overflow-y: auto;
+}
+
+.inbox-item {
+  background: rgba(240,252,248,0.75);
+  border: 1.5px solid rgba(100,200,160,0.25);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.inbox-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.72rem;
+  color: rgba(60,120,100,0.65);
+  margin-bottom: 6px;
+}
+
+.inbox-cat {
+  background: linear-gradient(135deg, #00c896, #0090e0);
+  color: white;
+  padding: 2px 10px;
+  border-radius: 100px;
+  font-weight: 700;
+}
+
+.inbox-text {
+  font-size: 0.88rem;
+  color: #1a3a2a;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin-bottom: 8px;
+}
+
 /* ===== ホーム画面追加バナー (A2HS) ===== */
 .a2hs-banner {
   position: fixed;

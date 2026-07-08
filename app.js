@@ -61,6 +61,9 @@ function init() {
   document.getElementById('feedbackBtn')?.addEventListener('click', openFeedbackModal);
   document.getElementById('sendFeedback')?.addEventListener('click', sendFeedbackFn);
   document.getElementById('closeFeedback')?.addEventListener('click', () => hide('feedbackModal'));
+  document.getElementById('inboxBtn')?.addEventListener('click', openInbox);
+  document.getElementById('reloadInbox')?.addEventListener('click', openInbox);
+  document.getElementById('closeInbox')?.addEventListener('click', () => hide('inboxModal'));
   document.getElementById('closeAuthModal').addEventListener('click', () => hide('authModal'));
   document.getElementById('googleLoginBtn').addEventListener('click', loginWithGoogle);
   document.getElementById('emailLoginBtn').addEventListener('click', () => loginWithEmail(false));
@@ -831,6 +834,76 @@ async function sendFeedbackFn() {
   }
 }
 
+// ===== 開発者用: ご意見受信箱 =====
+// メールアドレス本体はコードに載せず、SHA-256ハッシュで照合する
+const OWNER_EMAIL_SHA256 = '1cf76b73a4440b6fd81bc9511ef934108500ab2ca653e7bb9d363512d957a7b7';
+
+async function sha256Hex(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function updateInboxVisibility() {
+  const btn = document.getElementById('inboxBtn');
+  if (!btn) return;
+  let isOwner = false;
+  if (authUser?.email && window.crypto?.subtle) {
+    try {
+      isOwner = (await sha256Hex(authUser.email.trim().toLowerCase())) === OWNER_EMAIL_SHA256;
+    } catch (e) { /* http環境等でcrypto不可なら非表示のまま */ }
+  }
+  btn.classList.toggle('hidden', !isOwner);
+}
+
+async function openInbox() {
+  show('inboxModal');
+  const list = document.getElementById('inboxList');
+  list.innerHTML = '<p class="empty-msg">読み込み中...</p>';
+  if (!authReady || !authApi) {
+    list.innerHTML = '<p class="error-msg">接続の準備中です。少し待ってからもう一度開いてください。</p>';
+    return;
+  }
+  try {
+    const snap = await authApi.dbMod.getDocs(authApi.dbMod.collection(authApi.db, 'feedback'));
+    const items = [];
+    snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+    items.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    if (!items.length) {
+      list.innerHTML = '<p class="empty-msg">まだ意見は届いていません</p>';
+      return;
+    }
+    list.innerHTML = items.map(f => {
+      const date = f.createdAt?.seconds
+        ? new Date(f.createdAt.seconds * 1000).toLocaleString('ja-JP', { dateStyle: 'short', timeStyle: 'short' })
+        : '日時不明';
+      return `<div class="inbox-item" id="fb-${f.id}">
+        <div class="inbox-meta">
+          <span class="inbox-cat">${escHtml(f.category || '-')}</span>
+          <span>${date}</span>
+          ${f.email ? `<span>${escHtml(f.email)}</span>` : '<span>未ログイン</span>'}
+        </div>
+        <div class="inbox-text">${escHtml(f.text || '')}</div>
+        <button class="btn-danger-sm" onclick="deleteFeedback('${f.id}')">削除</button>
+      </div>`;
+    }).join('');
+  } catch (err) {
+    console.error(err);
+    list.innerHTML = '<p class="error-msg">読み込みに失敗しました。Firestoreルールが最新か確認してください。</p>';
+  }
+}
+
+async function deleteFeedback(id) {
+  if (!confirm('この意見を削除しますか？')) return;
+  try {
+    await authApi.dbMod.deleteDoc(authApi.dbMod.doc(authApi.db, 'feedback', id));
+    document.getElementById(`fb-${id}`)?.remove();
+    showToast('削除しました');
+  } catch (err) {
+    console.error(err);
+    showToast('削除に失敗しました');
+  }
+}
+
 // ===== ホーム画面追加(A2HS)誘導 =====
 let deferredInstallPrompt = null;
 
@@ -915,6 +988,7 @@ async function initAuth() {
     authMod.onAuthStateChanged(auth, async user => {
       authUser = user;
       updateAuthUi();
+      updateInboxVisibility();
       if (user) {
         await loadCloudState();
         setAuthStatus(`${user.email || 'ログイン中'} として同期中です。`);

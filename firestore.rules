@@ -6,14 +6,17 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // ユーザーからの意見・要望（未ログインでも送信可。読み取りはコンソールのみ）
+    // ユーザーからの意見・要望（未ログインでも送信可。閲覧・削除は開発者のみ）
     match /feedback/{feedbackId} {
       allow create: if request.resource.data.text is string
                     && request.resource.data.text.size() > 0
                     && request.resource.data.text.size() <= 2000
                     && request.resource.data.category is string
                     && request.resource.data.category.size() <= 20;
-      allow read, update, delete: if false;
+      allow read, delete: if request.auth != null
+                          && request.auth.token.email == 'tt11hshikata@gmail.com'
+                          && request.auth.token.email_verified == true;
+      allow update: if false;
     }
   }
 }

@@ -32,6 +32,7 @@
         <button class="nav-btn" data-view="history">📺 履歴</button>
   <button class="nav-btn" data-view="lists">⭐ マイリスト</button>
         <button class="nav-btn" id="feedbackBtn" type="button">💬 ご意見</button>
+        <button class="nav-btn hidden" id="inboxBtn" type="button">📮 受信箱</button>
       </nav>
       <div class="auth-area">
         <button id="authBtn" class="auth-btn">ログイン</button>
@@ -155,6 +156,18 @@
     </div>
   </div>
 
+  <!-- 受信箱モーダル（開発者のみ表示） -->
+  <div id="inboxModal" class="modal hidden">
+    <div class="modal-box inbox-box">
+      <h3>📮 届いたご意見</h3>
+      <div id="inboxList"></div>
+      <div class="modal-btns">
+        <button id="reloadInbox" class="btn-secondary">再読み込み</button>
+        <button id="closeInbox" class="btn-secondary">閉じる</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ログインモーダル -->
   <div id="authModal" class="modal hidden">
     <div class="modal-box auth-modal-box">
@@ -230,8 +243,8 @@
     </div>
   </div>
 
-  <script src="data.js?v=20260706b"></script>
-<script src="auth-config.js?v=20260706b"></script>
-<script src="app.js?v=20260706b"></script>
+  <script src="data.js?v=20260708a"></script>
+<script src="auth-config.js?v=20260708a"></script>
+<script src="app.js?v=20260708a"></script>
 </body>
 </html>
