@@ -12,6 +12,7 @@ let authApi = null;
 let syncTimer = null;
 let applyingCloudState = false;
 let authBusy = false;
+let authInitMessage = 'ログイン機能を読み込んでいます...';
 
 // ===== Storage =====
 const DEFAULT_API_KEY = 'AIzaSyDTKRzs6y3r9eRFuRRgKvv5UypD4AitNv8';
@@ -960,9 +961,13 @@ async function initAuth() {
   updateAuthUi();
   const config = window.STUDYTUBE_FIREBASE_CONFIG;
   if (!config || !config.apiKey || !config.projectId) {
-    setAuthStatus('Firebase設定を入れるとログインと同期が使えます。今はこのブラウザに保存されています。');
+    authInitMessage = 'Firebase設定がまだ入っていません。auth-config.js に設定を入れてください。';
+    setAuthStatus(authInitMessage);
     return;
   }
+
+  authInitMessage = 'ログイン機能を読み込んでいます...';
+  setAuthStatus(authInitMessage);
 
   try {
     const [appMod, authMod, dbMod] = await Promise.all([
@@ -977,6 +982,7 @@ async function initAuth() {
     const db = dbMod.getFirestore(app);
     authApi = { auth, db, authMod, dbMod };
     authReady = true;
+    authInitMessage = 'ログインすると、マイリスト・メモ・教科の配置をスマホとPCで同期できます。';
 
     try {
       await authMod.getRedirectResult(auth);
@@ -998,14 +1004,15 @@ async function initAuth() {
     });
   } catch (err) {
     console.error(err);
-    setAuthStatus('ログイン機能の読み込みに失敗しました。通信環境かFirebase設定を確認してください。');
+    authInitMessage = 'ログイン機能の読み込みに失敗しました。通信環境かFirebase設定を確認してください。';
+    setAuthStatus(authInitMessage);
   }
 }
 
 function openAuthModal() {
   show('authModal');
   if (authUser) setAuthStatus(`${authUser.email || 'ログイン中'} として同期中です。`);
-  else if (!authReady) setAuthStatus('Firebase設定を入れるとログインと同期が使えます。今はこのブラウザに保存されています。');
+  else if (!authReady) setAuthStatus(authInitMessage);
   else setAuthStatus('ログインすると、マイリスト・メモ・教科の配置をスマホとPCで同期できます。');
 }
 
