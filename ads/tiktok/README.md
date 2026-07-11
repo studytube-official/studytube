@@ -2,7 +2,7 @@
 
 TikTok広告やCapCut編集用の縦長デモページです。
 
-- Public URL: `https://studytube-official.github.io/studytube/ads/tiktok/`
+- Public URL: `https://manacue.com/ads/tiktok/`
 - 尺: 約18秒ループ
 - 推奨録画: 9:16
 - テキストは最小限にして、説明文はCapCutで後から追加する前提です。

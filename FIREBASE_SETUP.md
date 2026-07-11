@@ -19,7 +19,8 @@ Googleログインで失敗する場合は、Authentication > Settings > Authori
 公開サイトでは少なくとも次を許可します。
 
 ```txt
-studytube-official.github.io
+manacue.com
+www.manacue.com
 ```
 
 ローカル確認用には、次も入っていると安心です。

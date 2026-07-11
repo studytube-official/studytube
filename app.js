@@ -844,21 +844,28 @@ async function sha256Hex(str) {
   return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+async function isOwnerAccount() {
+  if (!authUser?.email || !window.crypto?.subtle) return false;
+  try {
+    return (await sha256Hex(authUser.email.trim().toLowerCase())) === OWNER_EMAIL_SHA256;
+  } catch (e) {
+    return false;
+  }
+}
+
 async function updateInboxVisibility() {
   const btn = document.getElementById('inboxBtn');
   if (!btn) return;
-  let isOwner = false;
-  if (authUser?.email && window.crypto?.subtle) {
-    try {
-      isOwner = (await sha256Hex(authUser.email.trim().toLowerCase())) === OWNER_EMAIL_SHA256;
-    } catch (e) { /* http環境等でcrypto不可なら非表示のまま */ }
-  }
-  btn.classList.toggle('hidden', !isOwner);
+  btn.classList.toggle('hidden', !(await isOwnerAccount()));
 }
 
 async function openInbox() {
-  show('inboxModal');
+  if (!(await isOwnerAccount())) {
+    showToast('この受信箱は開発者アカウント専用です');
+    return;
+  }
   const list = document.getElementById('inboxList');
+  show('inboxModal');
   list.innerHTML = '<p class="empty-msg">読み込み中...</p>';
   if (!authReady || !authApi) {
     list.innerHTML = '<p class="error-msg">接続の準備中です。少し待ってからもう一度開いてください。</p>';
@@ -894,6 +901,10 @@ async function openInbox() {
 }
 
 async function deleteFeedback(id) {
+  if (!(await isOwnerAccount())) {
+    showToast('削除できるのは開発者アカウントだけです');
+    return;
+  }
   if (!confirm('この意見を削除しますか？')) return;
   try {
     await authApi.dbMod.deleteDoc(authApi.dbMod.doc(authApi.db, 'feedback', id));
