@@ -6,6 +6,18 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
+    // AI復習セットは既存の同期ドキュメントと分け、ユーザー本人だけが利用する。
+    match /users/{userId}/aiReviews/{reviewId} {
+      allow read, delete: if request.auth != null
+                          && request.auth.uid == userId;
+      allow create, update: if request.auth != null
+                            && request.auth.uid == userId
+                            && request.resource.data.videoId is string
+                            && request.resource.data.videoId.size() <= 32
+                            && request.resource.data.note is string
+                            && request.resource.data.note.size() <= 1500;
+    }
+
     // ユーザーからの意見・要望（未ログインでも送信可。閲覧・削除は開発者のみ）
     match /feedback/{feedbackId} {
       allow create: if request.resource.data.text is string

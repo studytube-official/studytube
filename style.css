@@ -638,6 +638,14 @@ header h1 {
 .btn-list { background: rgba(200,240,255,0.8); border-color: rgba(0,180,220,0.25); color: #0060a0; }
 .btn-list:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,160,220,0.15); }
 
+.btn-ai {
+  background: linear-gradient(135deg, rgba(15,205,163,0.92), rgba(0,151,224,0.92));
+  border-color: rgba(84,255,218,0.46);
+  color: white;
+  box-shadow: 0 5px 16px rgba(0,170,190,0.2);
+}
+.btn-ai:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0,160,200,0.3); }
+
 /* ===== Spinner ===== */
 .spinner { text-align: center; padding: 48px; color: rgba(0,160,120,0.5); font-size: 0.9rem; letter-spacing: 0.5px; }
 .spinner::before { content: "🌿 読み込み中..."; }
@@ -810,6 +818,338 @@ header h1 {
 
 .btn-secondary { background: rgba(240,252,248,0.9); color: #3a7a6a; border: 1.5px solid rgba(100,200,160,0.25); padding: 9px 24px; border-radius: 100px; cursor: pointer; font-weight: 500; font-size: 0.88rem; transition: all 0.2s; }
 .btn-secondary:hover { background: rgba(220,248,240,0.95); transform: translateY(-1px); }
+
+.btn-ai-secondary {
+  background: rgba(224,250,247,0.92);
+  color: #007b85;
+  border: 1.5px solid rgba(0,190,190,0.3);
+  padding: 9px 18px;
+  border-radius: 100px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.84rem;
+  transition: all 0.2s;
+}
+.btn-ai-secondary:hover { background: rgba(205,247,244,0.98); transform: translateY(-1px); }
+
+/* ===== AI復習セット ===== */
+.ai-review-modal-box {
+  max-width: 760px;
+  max-height: 92dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.ai-review-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 14px;
+}
+
+.ai-review-header h3 {
+  margin: 3px 0 0;
+  color: #103f43;
+  font-size: 1.25rem;
+  line-height: 1.35;
+}
+
+.ai-review-kicker,
+.ai-review-focus {
+  display: inline-flex;
+  width: fit-content;
+  padding: 4px 10px;
+  border: 1px solid rgba(0,190,190,0.24);
+  border-radius: 100px;
+  background: rgba(221,251,245,0.82);
+  color: #008f82;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.ai-review-close {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(0,160,150,0.18);
+  border-radius: 50%;
+  background: rgba(245,255,252,0.9);
+  color: #36706a;
+  cursor: pointer;
+  font-size: 0.88rem;
+}
+
+.ai-review-source {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0 16px;
+  border-bottom: 1px solid rgba(0,170,155,0.14);
+}
+
+.ai-review-source img {
+  flex: 0 0 auto;
+  width: 104px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #d8eee8;
+}
+
+.ai-review-source div {
+  min-width: 0;
+}
+
+.ai-review-source strong {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #153f3a;
+  font-size: 0.86rem;
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.ai-review-source span {
+  display: block;
+  margin-top: 5px;
+  color: rgba(31,91,82,0.58);
+  font-size: 0.72rem;
+}
+
+.ai-review-inputs {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 12px;
+  padding: 16px 0 4px;
+}
+
+.ai-review-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 7px;
+  color: #315f58;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.ai-review-field select,
+.ai-review-field textarea {
+  margin: 0;
+}
+
+.ai-review-field small {
+  align-self: flex-end;
+  color: rgba(40,100,80,0.46);
+  font-size: 0.66rem;
+  font-weight: 500;
+}
+
+.ai-review-disclosure {
+  margin: 8px 0 10px !important;
+  padding-left: 10px;
+  border-left: 2px solid rgba(0,177,176,0.28);
+  color: rgba(37,90,82,0.58) !important;
+  font-size: 0.72rem !important;
+  line-height: 1.55 !important;
+}
+
+.ai-review-status {
+  min-height: 42px;
+  margin: 10px 0 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(0,160,150,0.16);
+  border-radius: 8px;
+  background: rgba(239,252,248,0.78);
+  color: #42736b;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.ai-review-status.is-loading {
+  background: rgba(226,250,249,0.92);
+  color: #007c89;
+}
+
+.ai-review-status.is-loading::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 8px;
+  border: 2px solid rgba(0,150,170,0.2);
+  border-top-color: #00a9b5;
+  border-radius: 50%;
+  animation: ai-spin 0.7s linear infinite;
+}
+
+.ai-review-status.is-success,
+.ai-review-status.is-cached {
+  border-color: rgba(0,175,125,0.2);
+  background: rgba(231,252,242,0.9);
+  color: #087451;
+}
+
+.ai-review-status.is-warning,
+.ai-review-status.is-error {
+  border-color: rgba(215,140,50,0.24);
+  background: rgba(255,248,229,0.9);
+  color: #865a20;
+}
+
+.ai-review-result {
+  padding: 4px 0 6px;
+}
+
+.ai-review-result h4 {
+  margin: 10px 0;
+  color: #174d48;
+  font-size: 0.92rem;
+}
+
+.ai-review-summary {
+  padding: 4px 0 14px;
+  border-bottom: 1px solid rgba(0,160,145,0.14);
+}
+
+.ai-review-summary ol {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding-left: 22px;
+  color: #275a53;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.ai-review-section {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(0,160,145,0.14);
+}
+
+.ai-question-list {
+  display: grid;
+  gap: 8px;
+}
+
+.ai-question {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 9px;
+  padding: 11px;
+  border: 1px solid rgba(0,160,150,0.14);
+  border-radius: 8px;
+  background: rgba(248,255,252,0.72);
+}
+
+.ai-question-number {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0ccaa2, #079bd4);
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.ai-question-body {
+  min-width: 0;
+}
+
+.ai-question-text {
+  margin: 2px 0 7px !important;
+  color: #163f3b !important;
+  font-size: 0.83rem !important;
+  font-weight: 700;
+  line-height: 1.55 !important;
+}
+
+.ai-question-hint {
+  margin: 0 0 8px !important;
+  color: #53786f !important;
+  font-size: 0.74rem !important;
+  line-height: 1.5 !important;
+}
+
+.ai-question details {
+  padding-top: 7px;
+  border-top: 1px dashed rgba(0,150,140,0.18);
+}
+
+.ai-question summary {
+  width: fit-content;
+  color: #008b91;
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.ai-question details strong {
+  display: block;
+  margin-top: 9px;
+  color: #12654f;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.ai-question details p {
+  margin: 6px 0 0 !important;
+  color: #486e66 !important;
+  font-size: 0.75rem !important;
+  line-height: 1.55 !important;
+}
+
+.ai-review-insights {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 14px 0 2px;
+}
+
+.ai-review-insights section {
+  padding: 11px 12px;
+  border: 1px solid rgba(0,160,150,0.14);
+  border-radius: 8px;
+  background: rgba(240,253,249,0.72);
+}
+
+.ai-review-insights span {
+  color: #008b79;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.ai-review-insights p {
+  margin: 5px 0 0 !important;
+  color: #315f58 !important;
+  font-size: 0.75rem !important;
+  line-height: 1.55 !important;
+}
+
+.ai-review-actions {
+  position: sticky;
+  bottom: -28px;
+  z-index: 2;
+  margin: 12px -28px -28px;
+  padding: 14px 28px 18px;
+  border-top: 1px solid rgba(0,170,150,0.12);
+  background: rgba(250,255,253,0.94);
+  backdrop-filter: blur(18px);
+}
+
+.ai-review-actions button:disabled {
+  opacity: 0.58;
+  cursor: wait;
+  transform: none;
+}
+
+@keyframes ai-spin {
+  to { transform: rotate(360deg); }
+}
 
 /* ===== ご意見モーダル ===== */
 .modal-box select {
@@ -1180,6 +1520,14 @@ header h1 {
 
   /* Modal */
   .modal-box { padding: 20px 16px; border-radius: 20px; }
+  .ai-review-modal-box { max-height: 94dvh; }
+  .ai-review-inputs { grid-template-columns: 1fr; }
+  .ai-review-insights { grid-template-columns: 1fr; }
+  .ai-review-actions {
+    bottom: -20px;
+    margin: 12px -16px -20px;
+    padding: 12px 16px 14px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1216,10 +1564,15 @@ header h1 {
   .topic-chips::-webkit-scrollbar { display: none; }
   .topic-chip { flex: 0 0 auto; }
   .video-actions { gap: 8px; }
-  .btn-action { min-height: 40px; }
+  .btn-action { min-height: 40px; font-size: 0.73rem; }
   .page-header-actions { flex-direction: column; align-items: stretch; }
   .page-header-actions select,
   .page-header-actions button { width: 100%; }
+  .modal-btns { flex-wrap: wrap; }
+  .ai-review-source img { width: 86px; }
+  .ai-review-header h3 { font-size: 1.02rem; }
+  .ai-question { grid-template-columns: 28px minmax(0, 1fr); padding: 9px; }
+  .ai-review-actions button { flex: 1 1 140px; }
 }
 
 /* ===== Future Nature concept layer ===== */

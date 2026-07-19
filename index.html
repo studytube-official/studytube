@@ -21,7 +21,7 @@
     gtag('config', 'G-02RE0K5Q9F');
   </script>
 
-  <link rel="stylesheet" href="style.css?v=20260712a">
+  <link rel="stylesheet" href="style.css?v=20260719a">
 </head>
 <body>
   <header>
@@ -195,7 +195,51 @@
       <textarea id="memoText" placeholder="この動画のメモを書く..." rows="6"></textarea>
       <div class="modal-btns">
         <button id="saveMemo" class="btn-primary">保存</button>
+        <button id="saveMemoAndReview" class="btn-ai-secondary">保存してAI復習</button>
         <button id="closeMemo" class="btn-secondary">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI復習セットモーダル -->
+  <div id="aiReviewModal" class="modal hidden">
+    <div class="modal-box ai-review-modal-box">
+      <div class="ai-review-header">
+        <div>
+          <span class="ai-review-kicker">AI復習セット</span>
+          <h3 id="aiReviewTitle">この動画を復習する</h3>
+        </div>
+        <button id="closeAiReviewIcon" class="ai-review-close" type="button" aria-label="閉じる">✕</button>
+      </div>
+
+      <div id="aiReviewSource" class="ai-review-source"></div>
+
+      <div class="ai-review-inputs">
+        <label class="ai-review-field">
+          <span>難易度</span>
+          <select id="aiReviewDifficulty">
+            <option value="basic">基礎</option>
+            <option value="standard" selected>標準</option>
+            <option value="advanced">発展</option>
+          </select>
+        </label>
+        <label class="ai-review-field ai-review-note-field">
+          <span>復習に使うメモ</span>
+          <textarea id="aiReviewNote" rows="4" maxlength="1500" placeholder="覚えたい要点、分からなかった部分、公式などを1行以上書いてください"></textarea>
+          <small><span id="aiReviewNoteCount">0</span>/1500文字</small>
+        </label>
+      </div>
+
+      <p class="ai-review-disclosure">
+        動画タイトル・教科・単元・メモをもとに生成します。動画の内容を直接解析したものではありません。
+      </p>
+
+      <div id="aiReviewStatus" class="ai-review-status" role="status"></div>
+      <div id="aiReviewResult" class="ai-review-result hidden"></div>
+
+      <div class="modal-btns ai-review-actions">
+        <button id="generateAiReview" class="btn-primary">AIで復習を作る</button>
+        <button id="closeAiReview" class="btn-secondary">閉じる</button>
       </div>
     </div>
   </div>
@@ -244,7 +288,7 @@
   </div>
 
   <script src="data.js?v=20260712a"></script>
-<script src="auth-config.js?v=20260712a"></script>
-<script src="app.js?v=20260712b"></script>
+  <script src="auth-config.js?v=20260719a"></script>
+  <script src="app.js?v=20260719a"></script>
 </body>
 </html>
