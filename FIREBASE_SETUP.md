@@ -73,7 +73,7 @@ AI復習セットは容量が増えやすいため、通常の同期データと
 6. サイトキーを `auth-config.js` の `MANACUE_APP_CHECK_SITE_KEY` に設定する
 7. App Check > APIでFirebase AI Logicの適用を有効にする
 
-AIモデルは低コストの `gemini-2.5-flash-lite` を使います。ユーザーがボタンを押した時だけ生成し、同じ動画・メモ・難易度の結果は端末とFirestoreから再利用します。
+AIモデルは低コストの `gemini-3.1-flash-lite` を使います。ユーザーがボタンを押した時だけ生成し、同じ動画・メモ・難易度の結果は端末とFirestoreから再利用します。
 
 ローカル確認時はブラウザの開発者コンソールに表示されるApp Checkデバッグトークンを、Firebase Console > App Check > アプリ > デバッグトークンの管理へ登録します。デバッグトークン自体はリポジトリに保存しません。
 

@@ -21,7 +21,7 @@ let applyingCloudState = false;
 let authBusy = false;
 let authInitMessage = 'ログイン機能を読み込んでいます...';
 
-const AI_MODEL_NAME = 'gemini-2.5-flash-lite';
+const AI_MODEL_NAME = 'gemini-3.1-flash-lite';
 const AI_PROMPT_VERSION = 'review-v1';
 const AI_NOTE_MIN_LENGTH = 8;
 const AI_NOTE_MAX_LENGTH = 1500;
