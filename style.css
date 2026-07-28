@@ -109,6 +109,26 @@ header h1 {
   transform: translateY(-2px);
 }
 
+.review-nav-btn {
+  position: relative;
+}
+
+.review-due-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  margin-left: 3px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #ff765f;
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 800;
+  box-shadow: 0 3px 9px rgba(190, 50, 34, 0.28);
+}
+
 .auth-area {
   display: flex;
   gap: 6px;
@@ -618,7 +638,7 @@ header h1 {
   pointer-events: none;
 }
 
-.video-actions { display: flex; gap: 6px; }
+.video-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 
 .btn-action {
   flex: 1;
@@ -646,6 +666,19 @@ header h1 {
 }
 .btn-ai:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0,160,200,0.3); }
 
+.btn-teachback {
+  flex: 1 1 100%;
+  padding: 9px 10px;
+  background: linear-gradient(135deg, #073f45, #087c76);
+  border-color: rgba(102, 255, 216, 0.4);
+  color: #effffb;
+  box-shadow: 0 6px 18px rgba(4, 69, 72, 0.2);
+}
+.btn-teachback:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 9px 24px rgba(4, 69, 72, 0.28);
+}
+
 /* ===== Spinner ===== */
 .spinner { text-align: center; padding: 48px; color: rgba(0,160,120,0.5); font-size: 0.9rem; letter-spacing: 0.5px; }
 .spinner::before { content: "🌿 読み込み中..."; }
@@ -659,6 +692,158 @@ header h1 {
 /* ===== History ===== */
 .history-group { padding: 4px 0 10px; }
 .history-date { font-size: 0.75rem; color: rgba(0,160,120,0.6); font-weight: 600; padding: 4px 0; border-bottom: 1px solid rgba(0,200,160,0.15); margin-bottom: 2px; letter-spacing: 0.5px; }
+
+/* ===== Spaced review cards ===== */
+.review-page-header {
+  align-items: flex-end;
+}
+
+.review-page-header > div > p {
+  margin-top: 6px;
+  color: rgba(32, 91, 80, 0.66);
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
+.review-page-kicker {
+  display: inline-block;
+  margin-bottom: 6px;
+  color: #008d7d;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.review-cards-status {
+  min-height: 22px;
+  margin-bottom: 14px;
+  color: rgba(30, 87, 78, 0.72);
+  font-size: 0.82rem;
+}
+
+.review-cards-status.is-loading::before {
+  content: "";
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  margin-right: 7px;
+  border: 2px solid rgba(0, 168, 120, 0.2);
+  border-top-color: #00a878;
+  border-radius: 50%;
+  vertical-align: -2px;
+  animation: ai-spin 0.7s linear infinite;
+}
+
+.review-cards-status.is-success {
+  color: #087a65;
+}
+
+.review-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.review-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 310px;
+  padding: 22px;
+  border: 1.5px solid rgba(21, 179, 143, 0.2);
+  border-radius: 22px;
+  background: rgba(250, 255, 253, 0.86);
+  box-shadow: 0 12px 36px rgba(0, 112, 91, 0.09);
+  backdrop-filter: blur(18px);
+}
+
+.review-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.review-card-meta span {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(19, 195, 156, 0.12);
+  color: #087b6d;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.review-card-meta small {
+  overflow: hidden;
+  color: rgba(52, 96, 88, 0.55);
+  font-size: 0.7rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.review-card h3 {
+  color: #073f45;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.review-card details {
+  margin: 18px 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(23, 159, 132, 0.16);
+  border-radius: 14px;
+  background: rgba(226, 250, 243, 0.62);
+}
+
+.review-card summary {
+  color: #087b6d;
+  font-size: 0.83rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.review-card details p {
+  margin-top: 12px;
+  color: #234f4c;
+  font-size: 0.86rem;
+  line-height: 1.7;
+}
+
+.review-card-actions {
+  display: flex;
+  gap: 9px;
+  margin-top: auto;
+}
+
+.review-card-actions button {
+  flex: 1;
+}
+
+.review-empty {
+  padding: 64px 20px;
+  border: 1.5px dashed rgba(24, 174, 142, 0.25);
+  border-radius: 24px;
+  background: rgba(247, 255, 252, 0.55);
+  text-align: center;
+}
+
+.review-empty > span {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 2.7rem;
+}
+
+.review-empty h3 {
+  margin-bottom: 8px;
+  color: #10564f;
+  font-size: 1rem;
+}
+
+.review-empty p {
+  color: rgba(43, 91, 83, 0.62);
+  font-size: 0.83rem;
+  line-height: 1.65;
+}
 
 /* ===== Lists ===== */
 .list-section { background: rgba(255,255,255,0.6); backdrop-filter: blur(16px); border: 1.5px solid rgba(100,200,160,0.18); border-radius: 22px; padding: 18px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,160,120,0.07); }
@@ -1151,6 +1336,167 @@ header h1 {
   to { transform: rotate(360deg); }
 }
 
+/* ===== AI Teachback ===== */
+.teachback-modal-box {
+  max-width: 780px;
+  max-height: 92dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.teachback-guide {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: 16px 0;
+  padding: 15px 17px;
+  border: 1px solid rgba(19, 195, 156, 0.18);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(222, 252, 243, 0.8), rgba(228, 247, 255, 0.75));
+}
+
+.teachback-guide-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #09b990, #198fdb);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 800;
+  box-shadow: 0 8px 22px rgba(0, 153, 142, 0.22);
+}
+
+.teachback-guide strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #064e52;
+  font-size: 0.94rem;
+}
+
+.teachback-guide p {
+  color: rgba(38, 85, 80, 0.68);
+  font-size: 0.79rem;
+  line-height: 1.55;
+}
+
+.teachback-input-field {
+  display: block;
+}
+
+.teachback-input-field textarea {
+  min-height: 150px;
+  resize: vertical;
+}
+
+.teachback-result {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.teachback-feedback-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.teachback-feedback-card {
+  padding: 17px;
+  border: 1px solid rgba(18, 173, 137, 0.16);
+  border-radius: 18px;
+  background: rgba(246, 255, 252, 0.88);
+}
+
+.teachback-feedback-card.is-understood {
+  background: rgba(226, 252, 241, 0.85);
+}
+
+.teachback-feedback-card.is-missing {
+  background: rgba(255, 247, 224, 0.82);
+}
+
+.teachback-feedback-card > span,
+.teachback-card-preview > div > span {
+  display: block;
+  margin-bottom: 10px;
+  color: #087c6d;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.teachback-feedback-card ul,
+.teachback-question-section ol {
+  padding-left: 1.25rem;
+}
+
+.teachback-feedback-card li,
+.teachback-question-section li,
+.teachback-feedback-card p {
+  margin: 6px 0;
+  color: #254f4c;
+  font-size: 0.84rem;
+  line-height: 1.65;
+}
+
+.teachback-question-section,
+.teachback-card-preview {
+  padding: 18px;
+  border: 1px solid rgba(14, 139, 150, 0.14);
+  border-radius: 18px;
+  background: rgba(244, 252, 255, 0.86);
+}
+
+.teachback-question-section h4 {
+  margin-bottom: 10px;
+  color: #096774;
+  font-size: 0.9rem;
+}
+
+.teachback-card-preview > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.teachback-card-preview > div > span {
+  margin-bottom: 0;
+}
+
+.teachback-card-preview > div > strong {
+  color: #075b57;
+  font-size: 0.82rem;
+}
+
+.teachback-card-preview details {
+  margin-top: 8px;
+  padding: 11px 13px;
+  border: 1px solid rgba(17, 169, 141, 0.14);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.teachback-card-preview summary {
+  color: #0b625d;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.55;
+  cursor: pointer;
+}
+
+.teachback-card-preview details p {
+  margin-top: 10px;
+  color: #315b57;
+  font-size: 0.82rem;
+  line-height: 1.65;
+}
+
 /* ===== ご意見モーダル ===== */
 .modal-box select {
   width: 100%;
@@ -1292,6 +1638,32 @@ header h1 {
 /* ===== Empty & Error ===== */
 .empty-msg { text-align: center; color: rgba(60,120,100,0.4); padding: 48px 16px; font-size: 0.9rem; }
 .error-msg { color: #c04040; padding: 16px; }
+.youtube-api-error {
+  grid-column: 1 / -1;
+  margin: 12px 0;
+  padding: 18px 20px;
+  border: 1.5px solid rgba(215,140,50,0.24);
+  border-radius: 16px;
+  background: rgba(255,248,229,0.92);
+  color: #865a20;
+  box-shadow: 0 8px 24px rgba(135,90,32,0.08);
+}
+.youtube-api-error strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.98rem;
+}
+.youtube-api-error p {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.65;
+}
+.youtube-api-error.is-network,
+.youtube-api-error.is-temporary {
+  border-color: rgba(0,160,200,0.2);
+  background: rgba(235,250,255,0.92);
+  color: #176a80;
+}
 
 /* ===== Hidden ===== */
 .hidden { display: none !important; }
@@ -1523,6 +1895,10 @@ header h1 {
   .ai-review-modal-box { max-height: 94dvh; }
   .ai-review-inputs { grid-template-columns: 1fr; }
   .ai-review-insights { grid-template-columns: 1fr; }
+  .teachback-modal-box { max-height: 94dvh; }
+  .teachback-feedback-grid { grid-template-columns: 1fr; }
+  .review-cards-grid { grid-template-columns: 1fr; }
+  .review-page-header { align-items: flex-start; }
   .ai-review-actions {
     bottom: -20px;
     margin: 12px -16px -20px;
@@ -1565,6 +1941,7 @@ header h1 {
   .topic-chip { flex: 0 0 auto; }
   .video-actions { gap: 8px; }
   .btn-action { min-height: 40px; font-size: 0.73rem; }
+  .btn-teachback { min-height: 44px; font-size: 0.78rem; }
   .page-header-actions { flex-direction: column; align-items: stretch; }
   .page-header-actions select,
   .page-header-actions button { width: 100%; }
@@ -1573,6 +1950,15 @@ header h1 {
   .ai-review-header h3 { font-size: 1.02rem; }
   .ai-question { grid-template-columns: 28px minmax(0, 1fr); padding: 9px; }
   .ai-review-actions button { flex: 1 1 140px; }
+  .teachback-guide { align-items: flex-start; padding: 13px; }
+  .teachback-guide-number {
+    width: 50px;
+    height: 50px;
+    flex-basis: 50px;
+    border-radius: 15px;
+  }
+  .teachback-card-preview > div { align-items: flex-start; flex-direction: column; }
+  .review-card { min-height: 280px; padding: 18px; }
 }
 
 /* ===== Future Nature concept layer ===== */

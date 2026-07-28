@@ -21,7 +21,7 @@
     gtag('config', 'G-02RE0K5Q9F');
   </script>
 
-  <link rel="stylesheet" href="style.css?v=20260719b">
+  <link rel="stylesheet" href="style.css?v=20260728a">
 </head>
 <body>
   <header>
@@ -30,7 +30,11 @@
       <nav class="header-nav">
         <button class="nav-btn active" data-view="search">🔍 検索</button>
         <button class="nav-btn" data-view="history">📺 履歴</button>
-  <button class="nav-btn" data-view="lists">⭐ マイリスト</button>
+        <button class="nav-btn" data-view="lists">⭐ マイリスト</button>
+        <button class="nav-btn review-nav-btn" data-view="reviews">
+          🔁 今日の復習
+          <span id="reviewDueBadge" class="review-due-badge hidden">0</span>
+        </button>
         <button class="nav-btn" id="feedbackBtn" type="button">💬 ご意見</button>
         <button class="nav-btn hidden" id="inboxBtn" type="button">📮 受信箱</button>
       </nav>
@@ -120,6 +124,25 @@
         <p id="emptyLists" class="empty-msg hidden">リストがありません。「＋ 新しいリスト」から作成してください</p>
       </div>
 
+      <!-- 今日の復習ビュー -->
+      <div id="reviewCardsView" class="hidden">
+        <div class="page-header review-page-header">
+          <div>
+            <span class="review-page-kicker">AI復習カード</span>
+            <h2>🔁 今日の復習</h2>
+            <p>ティーチバックから作ったカードを、忘れる前に思い出します。</p>
+          </div>
+          <button id="reloadReviewCards" class="btn-primary-sm" type="button">更新</button>
+        </div>
+        <div id="reviewCardsStatus" class="review-cards-status" role="status"></div>
+        <div id="reviewCardsContainer" class="review-cards-grid"></div>
+        <div id="emptyReviewCards" class="review-empty hidden">
+          <span>🌱</span>
+          <h3>今日の復習はありません</h3>
+          <p id="reviewUpcomingText">動画を見たら「学びを説明」から始めてみましょう。</p>
+        </div>
+      </div>
+
     </main>
   </div>
 
@@ -197,6 +220,47 @@
         <button id="saveMemo" class="btn-primary">保存</button>
         <button id="saveMemoAndReview" class="btn-ai-secondary">保存してAI復習</button>
         <button id="closeMemo" class="btn-secondary">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AIティーチバックモーダル -->
+  <div id="teachbackModal" class="modal hidden">
+    <div class="modal-box teachback-modal-box">
+      <div class="ai-review-header">
+        <div>
+          <span class="ai-review-kicker">AIティーチバック</span>
+          <h3 id="teachbackTitle">学んだことを説明する</h3>
+        </div>
+        <button id="closeTeachbackIcon" class="ai-review-close" type="button" aria-label="閉じる">✕</button>
+      </div>
+
+      <div id="teachbackSource" class="ai-review-source"></div>
+
+      <div class="teachback-guide">
+        <span class="teachback-guide-number">30秒</span>
+        <div>
+          <strong>この動画で学んだことは？</strong>
+          <p>うまく書こうとせず、自分の言葉で1〜3文にしてみましょう。</p>
+        </div>
+      </div>
+
+      <label class="ai-review-field teachback-input-field">
+        <span>自分の説明</span>
+        <textarea id="teachbackText" rows="6" maxlength="1000" placeholder="例：現在完了は、過去から今まで続いていることや、経験を表すときに使う。"></textarea>
+        <small><span id="teachbackTextCount">0</span>/1000文字</small>
+      </label>
+
+      <p class="ai-review-disclosure">
+        動画タイトル・説明文・教科・単元・あなたの説明をもとに考えます。字幕・動画・音声は送信しません。
+      </p>
+
+      <div id="teachbackStatus" class="ai-review-status" role="status"></div>
+      <div id="teachbackResult" class="teachback-result hidden"></div>
+
+      <div class="modal-btns ai-review-actions">
+        <button id="generateTeachback" class="btn-primary">AIに確認してもらう</button>
+        <button id="closeTeachback" class="btn-secondary">閉じる</button>
       </div>
     </div>
   </div>
@@ -289,6 +353,6 @@
 
   <script src="data.js?v=20260712a"></script>
   <script src="auth-config.js?v=20260719b"></script>
-  <script src="app.js?v=20260719b"></script>
+  <script src="app.js?v=20260728a"></script>
 </body>
 </html>

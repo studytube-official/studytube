@@ -18,6 +18,137 @@ service cloud.firestore {
                             && request.resource.data.note.size() <= 1500;
     }
 
+    // ティーチバックは動画ごとの学習セッションとして保存する。
+    match /users/{userId}/teachbacks/{sessionId} {
+      allow read, delete: if request.auth != null
+                          && request.auth.uid == userId;
+      allow create, update: if request.auth != null
+                            && request.auth.uid == userId
+                            && request.resource.data.keys().hasOnly([
+                              'id', 'userId', 'signature',
+                              'videoId', 'videoTitle', 'videoDescription',
+                              'subjectId', 'unitId', 'topic',
+                              'subjectName', 'unitName',
+                              'teachbackText', 'feedback',
+                              'promptVersion', 'model',
+                              'createdAt', 'updatedAt'
+                            ])
+                            && request.resource.data.keys().hasAll([
+                              'id', 'userId', 'signature',
+                              'videoId', 'videoTitle', 'videoDescription',
+                              'subjectId', 'unitId', 'topic',
+                              'subjectName', 'unitName',
+                              'teachbackText', 'feedback',
+                              'promptVersion', 'model',
+                              'createdAt', 'updatedAt'
+                            ])
+                            && request.resource.data.id == sessionId
+                            && request.resource.data.userId == userId
+                            && request.resource.data.signature is string
+                            && request.resource.data.signature.size() <= 64
+                            && request.resource.data.videoId is string
+                            && request.resource.data.videoId.size() <= 32
+                            && request.resource.data.videoTitle is string
+                            && request.resource.data.videoTitle.size() <= 500
+                            && request.resource.data.videoDescription is string
+                            && request.resource.data.videoDescription.size() <= 2000
+                            && request.resource.data.subjectId is string
+                            && request.resource.data.subjectId.size() <= 80
+                            && request.resource.data.unitId is string
+                            && request.resource.data.unitId.size() <= 80
+                            && request.resource.data.topic is string
+                            && request.resource.data.topic.size() <= 200
+                            && request.resource.data.subjectName is string
+                            && request.resource.data.subjectName.size() <= 200
+                            && request.resource.data.unitName is string
+                            && request.resource.data.unitName.size() <= 200
+                            && request.resource.data.teachbackText is string
+                            && request.resource.data.teachbackText.size() >= 12
+                            && request.resource.data.teachbackText.size() <= 1000
+                            && request.resource.data.feedback is map
+                            && request.resource.data.feedback.keys().hasOnly([
+                              'understoodPoints', 'missingPoints',
+                              'followUpQuestions', 'reviewCards', 'concepts'
+                            ])
+                            && request.resource.data.feedback.keys().hasAll([
+                              'understoodPoints', 'missingPoints',
+                              'followUpQuestions', 'reviewCards', 'concepts'
+                            ])
+                            && request.resource.data.feedback.understoodPoints is list
+                            && request.resource.data.feedback.understoodPoints.size() <= 3
+                            && request.resource.data.feedback.missingPoints is list
+                            && request.resource.data.feedback.missingPoints.size() <= 2
+                            && request.resource.data.feedback.followUpQuestions is list
+                            && request.resource.data.feedback.followUpQuestions.size() <= 2
+                            && request.resource.data.feedback.reviewCards is list
+                            && request.resource.data.feedback.reviewCards.size() <= 3
+                            && request.resource.data.feedback.concepts is list
+                            && request.resource.data.feedback.concepts.size() <= 5
+                            && request.resource.data.promptVersion is string
+                            && request.resource.data.promptVersion.size() <= 50
+                            && request.resource.data.model is string
+                            && request.resource.data.model.size() <= 100
+                            && request.resource.data.createdAt is int
+                            && request.resource.data.createdAt >= 0
+                            && request.resource.data.updatedAt is int
+                            && request.resource.data.updatedAt >= request.resource.data.createdAt;
+    }
+
+    // 復習日の計算は通常コードで行い、カードごとに独立して同期する。
+    match /users/{userId}/reviewCards/{cardId} {
+      allow read, delete: if request.auth != null
+                          && request.auth.uid == userId;
+      allow create, update: if request.auth != null
+                            && request.auth.uid == userId
+                            && request.resource.data.keys().hasOnly([
+                              'id', 'userId', 'sessionId',
+                              'videoId', 'videoTitle',
+                              'question', 'answer',
+                              'stage', 'status', 'dueAt',
+                              'createdAt', 'updatedAt', 'lastReviewedAt'
+                            ])
+                            && request.resource.data.keys().hasAll([
+                              'id', 'userId', 'sessionId',
+                              'videoId', 'videoTitle',
+                              'question', 'answer',
+                              'stage', 'status', 'dueAt',
+                              'createdAt', 'updatedAt', 'lastReviewedAt'
+                            ])
+                            && request.resource.data.id == cardId
+                            && request.resource.data.userId == userId
+                            && request.resource.data.sessionId is string
+                            && request.resource.data.sessionId.size() <= 160
+                            && request.resource.data.videoId is string
+                            && request.resource.data.videoId.size() <= 32
+                            && request.resource.data.videoTitle is string
+                            && request.resource.data.videoTitle.size() <= 500
+                            && request.resource.data.question is string
+                            && request.resource.data.question.size() > 0
+                            && request.resource.data.question.size() <= 1000
+                            && request.resource.data.answer is string
+                            && request.resource.data.answer.size() > 0
+                            && request.resource.data.answer.size() <= 2000
+                            && request.resource.data.stage is int
+                            && request.resource.data.stage >= 0
+                            && request.resource.data.stage <= 2
+                            && request.resource.data.status in ['active', 'mastered']
+                            && (
+                              (request.resource.data.status == 'active'
+                                && request.resource.data.stage <= 1)
+                              || (request.resource.data.status == 'mastered'
+                                && request.resource.data.stage == 2)
+                            )
+                            && request.resource.data.dueAt is int
+                            && request.resource.data.dueAt >= 0
+                            && request.resource.data.createdAt is int
+                            && request.resource.data.createdAt >= 0
+                            && request.resource.data.updatedAt is int
+                            && request.resource.data.updatedAt >= request.resource.data.createdAt
+                            && request.resource.data.lastReviewedAt is int
+                            && request.resource.data.lastReviewedAt >= 0
+                            && request.resource.data.lastReviewedAt <= request.resource.data.updatedAt;
+    }
+
     // ユーザーからの意見・要望（未ログインでも送信可。閲覧・削除は開発者のみ）
     match /feedback/{feedbackId} {
       allow create: if request.resource.data.text is string
