@@ -3,7 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ManaCue - 受験生のための動画学習</title>
+  <title>ManaCue - YouTube学習を、見ただけで終わらせない</title>
+  <meta name="description" content="共通テスト13教科のYouTube動画を探して整理し、自分の言葉で説明。AIティーチバックと3日後・7日後の復習カードで、見るだけの勉強を身につく学習へ。">
+  <link rel="canonical" href="https://manacue.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="ManaCue">
+  <meta property="og:title" content="見ただけを、解けるに。｜ManaCue">
+  <meta property="og:description" content="YouTubeの勉強動画を、探す・整理する・説明する・復習するまでひとつに。">
+  <meta property="og:url" content="https://manacue.com/">
+  <meta property="og:image" content="https://manacue.com/assets/future-school-hero.png">
+  <meta name="twitter:card" content="summary_large_image">
 
   <!-- PWA / ホーム画面追加用 -->
   <link rel="manifest" href="manifest.json">
@@ -21,7 +30,7 @@
     gtag('config', 'G-02RE0K5Q9F');
   </script>
 
-  <link rel="stylesheet" href="style.css?v=20260728a">
+  <link rel="stylesheet" href="style.css?v=20260729a">
 </head>
 <body>
   <header>
@@ -57,6 +66,11 @@
           <div id="bubbleInner"></div>
         </div>
         <div class="bubble-fade-overlay" aria-hidden="true"></div>
+        <div class="mobile-value-prop" aria-hidden="true">
+          <span>CUE MAPで学ぶ。ManaCueで身につける。</span>
+          <strong>見ただけを、解けるに。</strong>
+          <small>教科を選んで、最初の1本から始めよう</small>
+        </div>
       </div>
     </aside>
 
@@ -67,9 +81,19 @@
       <div id="searchView">
         <div id="welcomeView" class="welcome">
           <div class="welcome-inner">
-            <p class="welcome-icon">🎯</p>
-            <h2>教科を選んで学習を始めよう</h2>
-            <p>気になる教科から、単元と動画を探せます</p>
+            <p class="welcome-kicker">CUE MAPで学ぶ。ManaCueで身につける。</p>
+            <h2>見ただけを、解けるに。</h2>
+            <p class="welcome-lead">共テ13教科の動画を整理して、自分の言葉で説明。AIが理解の穴を見つけ、3日後・7日後の復習につなげます。</p>
+            <div class="welcome-flow" aria-label="ManaCueの学習ステップ">
+              <span><b>1</b>動画を探す</span>
+              <i>→</i>
+              <span><b>2</b>整理する</span>
+              <i>→</i>
+              <span><b>3</b>説明する</span>
+              <i>→</i>
+              <span><b>4</b>復習する</span>
+            </div>
+            <p class="welcome-start">左の教科から、今日見る1本を選んでください。</p>
           </div>
           <div class="mobile-subject-grid" id="mobileSubjectGrid"></div>
         </div>
@@ -353,6 +377,6 @@
 
   <script src="data.js?v=20260712a"></script>
   <script src="auth-config.js?v=20260719b"></script>
-  <script src="app.js?v=20260728a"></script>
+  <script src="app.js?v=20260729a"></script>
 </body>
 </html>

@@ -445,6 +445,68 @@ header h1 {
 .welcome-icon { font-size: 3.5rem; margin-bottom: 18px; filter: drop-shadow(0 4px 12px rgba(0,160,120,0.3)); }
 .welcome h2 { font-size: 1.4rem; margin-bottom: 10px; color: #00a878; font-weight: 600; }
 .welcome p { color: rgba(60,120,100,0.6); }
+.welcome-kicker {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  margin: 0 0 16px;
+  padding: 7px 14px;
+  border: 1px solid rgba(0, 196, 170, 0.2);
+  border-radius: 999px;
+  background: rgba(244, 255, 251, 0.68);
+  color: #087b78 !important;
+  font-size: 0.78rem;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em;
+}
+.welcome-lead {
+  width: min(100%, 660px);
+  margin: 0 auto;
+  font-size: 0.95rem;
+  line-height: 1.85;
+}
+.welcome-flow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 24px auto 18px;
+}
+.welcome-flow span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 12px;
+  border: 1px solid rgba(0, 196, 170, 0.18);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.64);
+  color: #145c60;
+  font-size: 0.79rem;
+  font-weight: 750;
+  box-shadow: 0 7px 22px rgba(0, 143, 153, 0.08);
+}
+.welcome-flow b {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #00c896, #009fe8);
+  color: #fff;
+  font-size: 0.68rem;
+}
+.welcome-flow i {
+  color: rgba(0, 155, 157, 0.45);
+  font-style: normal;
+}
+.welcome-start {
+  margin-top: 8px;
+  color: #087b78 !important;
+  font-size: 0.82rem;
+  font-weight: 750 !important;
+}
+.mobile-value-prop { display: none; }
 
 /* ===== Breadcrumb ===== */
 .breadcrumb { font-size: 0.82rem; color: rgba(60,120,100,0.5); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
@@ -2150,6 +2212,9 @@ header h1 {
 
 .welcome h2 {
   color: #00a987;
+  font-size: clamp(1.8rem, 3vw, 2.75rem);
+  font-weight: 900;
+  letter-spacing: -0.035em;
   text-shadow: 0 0 18px rgba(53,243,173,0.32), 0 1px 0 rgba(255,255,255,0.8);
 }
 
@@ -2162,6 +2227,43 @@ header h1 {
   .bubble-shell::before { inset: 12px; border-radius: 18px; }
   .bubble-shell::after { bottom: 13px; font-size: 0.62rem; }
   #welcomeView.welcome { display: none; }
+  .mobile-value-prop {
+    position: absolute;
+    z-index: 8;
+    right: 14px;
+    bottom: 16px;
+    left: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 11px 14px 12px;
+    border: 1px solid rgba(0, 196, 170, 0.22);
+    border-radius: 18px;
+    background: rgba(242, 255, 251, 0.76);
+    box-shadow: 0 12px 36px rgba(0, 120, 145, 0.14);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    color: #0b6267;
+    text-align: center;
+    pointer-events: none;
+  }
+  .mobile-value-prop span {
+    font-size: 0.61rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+  }
+  .mobile-value-prop strong {
+    margin-top: 2px;
+    color: #008f82;
+    font-size: 1.12rem;
+    letter-spacing: -0.02em;
+  }
+  .mobile-value-prop small {
+    margin-top: 2px;
+    color: rgba(9, 44, 52, 0.65);
+    font-size: 0.66rem;
+    font-weight: 650;
+  }
   body::before {
     background:
       linear-gradient(rgba(130,255,235,0.08) 1px, transparent 1px),

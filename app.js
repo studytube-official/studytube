@@ -24,6 +24,7 @@ let syncTimer = null;
 let applyingCloudState = false;
 let authBusy = false;
 let authInitMessage = 'ログイン機能を読み込んでいます...';
+let acquisitionContext = null;
 
 const AI_MODEL_NAME = 'gemini-3.1-flash-lite';
 const AI_PROMPT_VERSION = 'review-v1';
@@ -35,6 +36,99 @@ const TEACHBACK_MAX_LENGTH = 1000;
 const VIDEO_DESCRIPTION_MAX_LENGTH = 2000;
 const REVIEW_DAY_MS = 24 * 60 * 60 * 1000;
 const REVIEW_MASTERED_DUE_AT = 253402300799000;
+const ACQUISITION_STORAGE_KEY = 'mc_acquisition';
+const MARKETING_MILESTONES_KEY = 'mc_marketing_milestones';
+
+// ===== Marketing attribution / analytics =====
+function cleanAnalyticsText(value, maxLength = 100) {
+  return String(value || '')
+    .replace(/[\u0000-\u001f\u007f]/g, '')
+    .trim()
+    .slice(0, maxLength);
+}
+
+function parseAcquisitionParams(search = '', referrer = '') {
+  const params = new URLSearchParams(search);
+  const source = cleanAnalyticsText(params.get('utm_source'), 60);
+  const medium = cleanAnalyticsText(params.get('utm_medium'), 60);
+  const campaign = cleanAnalyticsText(params.get('utm_campaign'), 100);
+  const content = cleanAnalyticsText(params.get('utm_content'), 100);
+  let referrerHost = '';
+  try {
+    referrerHost = referrer ? new URL(referrer).hostname.replace(/^www\./, '') : '';
+  } catch {
+    referrerHost = '';
+  }
+  return {
+    source: source || referrerHost || 'direct',
+    medium: medium || (source ? 'social' : referrerHost ? 'referral' : 'none'),
+    campaign: campaign || 'none',
+    content: content || 'none',
+    hasCampaign: Boolean(source || medium || campaign || content)
+  };
+}
+
+function storedAcquisition() {
+  const value = readJson(ACQUISITION_STORAGE_KEY, null);
+  return value && typeof value === 'object' ? value : null;
+}
+
+function initAcquisitionTracking() {
+  const inbound = parseAcquisitionParams(
+    typeof location !== 'undefined' ? location.search : '',
+    typeof document !== 'undefined' ? document.referrer : ''
+  );
+  let firstTouch = storedAcquisition();
+  if (!firstTouch) {
+    firstTouch = {
+      source: inbound.source,
+      medium: inbound.medium,
+      campaign: inbound.campaign,
+      content: inbound.content,
+      firstSeenAt: Date.now()
+    };
+    localStorage.setItem(ACQUISITION_STORAGE_KEY, JSON.stringify(firstTouch));
+  }
+  acquisitionContext = {
+    source: inbound.hasCampaign ? inbound.source : firstTouch.source,
+    medium: inbound.hasCampaign ? inbound.medium : firstTouch.medium,
+    campaign: inbound.hasCampaign ? inbound.campaign : firstTouch.campaign,
+    content: inbound.hasCampaign ? inbound.content : firstTouch.content,
+    firstSource: firstTouch.source,
+    firstCampaign: firstTouch.campaign,
+    hasCampaign: inbound.hasCampaign
+  };
+  trackMarketingEvent('marketing_entry', {
+    campaign_present: inbound.hasCampaign,
+    landing_path: typeof location !== 'undefined' ? location.pathname : '/'
+  });
+}
+
+function trackMarketingEvent(name, params = {}) {
+  if (typeof gtag !== 'function') return;
+  const context = acquisitionContext || storedAcquisition() || {};
+  const payload = {
+    acquisition_source: cleanAnalyticsText(context.source || 'direct', 60),
+    acquisition_medium: cleanAnalyticsText(context.medium || 'none', 60),
+    acquisition_campaign: cleanAnalyticsText(context.campaign || 'none', 100),
+    acquisition_content: cleanAnalyticsText(context.content || 'none', 100),
+    user_state: authUser ? 'signed_in' : 'guest'
+  };
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    payload[key] = typeof value === 'string' ? cleanAnalyticsText(value) : value;
+  });
+  gtag('event', name, payload);
+}
+
+function trackFirstMilestone(key, eventName, params = {}) {
+  const milestones = readJson(MARKETING_MILESTONES_KEY, {});
+  if (milestones[key]) return false;
+  milestones[key] = Date.now();
+  localStorage.setItem(MARKETING_MILESTONES_KEY, JSON.stringify(milestones));
+  trackMarketingEvent(eventName, params);
+  return true;
+}
 
 // ===== Storage =====
 const DEFAULT_API_KEY = 'AIzaSyDTKRzs6y3r9eRFuRRgKvv5UypD4AitNv8';
@@ -69,6 +163,7 @@ function savePendingReviewCardSyncs(d) { writeJson('mc_review_card_sync_queue', 
 
 // ===== Init =====
 function init() {
+  initAcquisitionTracking();
   renderSubjectList();
   renderMobileSubjectGrid();
   bindNav();
@@ -130,6 +225,7 @@ function bindNav() {
 
 function switchView(view) {
   currentView = view;
+  trackMarketingEvent('app_view_opened', { app_view: view });
   hide('searchView'); hide('historyView'); hide('listsView'); hide('reviewCardsView');
   const sidebar = document.getElementById('sidebar');
   if (view === 'search') {
@@ -376,6 +472,8 @@ function endNodeDrag() {
 
 function selectSubject(subjectId) {
   currentSubject = SUBJECTS.find(s => s.id === subjectId);
+  if (!currentSubject) return;
+  trackMarketingEvent('subject_selected', { subject_id: currentSubject.id });
   currentUnit = null; currentTopic = null;
   bp.dragging = false;
   document.querySelectorAll('.subject-bubble').forEach(el => {
@@ -437,6 +535,11 @@ function showUnitView() {
 
 function selectUnit(unitId) {
   currentUnit = currentSubject.units.find(u => u.id === unitId);
+  if (!currentUnit) return;
+  trackMarketingEvent('unit_selected', {
+    subject_id: currentSubject.id,
+    unit_id: currentUnit.id
+  });
   currentTopic = null;
   showVideoView();
 }
@@ -458,6 +561,11 @@ function showVideoView() {
 
 function selectTopic(topic) {
   currentTopic = topic;
+  trackMarketingEvent('topic_selected', {
+    subject_id: currentSubject?.id || 'unknown',
+    unit_id: currentUnit?.id || 'unknown',
+    topic_selected: Boolean(topic)
+  });
   showVideoView();
 }
 
@@ -474,17 +582,26 @@ async function fetchVideos(query) {
   show('loadingSpinner');
   document.getElementById('videoGrid').innerHTML = renderTopicChips();
   currentOrder = document.getElementById('orderSelect')?.value || currentOrder;
+  trackMarketingEvent('video_search_started', {
+    subject_id: currentSubject?.id || 'unknown',
+    unit_id: currentUnit?.id || 'unknown',
+    topic_selected: Boolean(currentTopic),
+    result_order: currentOrder
+  });
   try {
     const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=12&relevanceLanguage=ja&order=${currentOrder}&key=${apiKey}`;
     const res = await fetch(url);
     const data = await res.json();
     if (!res.ok || data.error) {
+      const copy = getYouTubeApiErrorMessage(data.error, res.status);
+      trackMarketingEvent('video_search_failed', { failure_kind: copy.kind });
       document.getElementById('videoGrid').innerHTML = renderTopicChips() + renderYouTubeApiError(data.error, res.status);
       return;
     }
     renderVideos(data.items || []);
   } catch(e) {
     console.error(e);
+    trackMarketingEvent('video_search_failed', { failure_kind: 'network' });
     document.getElementById('videoGrid').innerHTML = renderTopicChips() + renderYouTubeApiError({ reason: 'networkError' });
   } finally {
     hide('loadingSpinner');
@@ -568,6 +685,11 @@ function renderTopicChips() {
 
 function renderVideos(items) {
   const grid = document.getElementById('videoGrid');
+  trackMarketingEvent('video_search_completed', {
+    subject_id: currentSubject?.id || 'unknown',
+    unit_id: currentUnit?.id || 'unknown',
+    result_count: items.length
+  });
   if (!items.length) { grid.innerHTML = renderTopicChips() + '<p class="empty-msg">動画が見つかりませんでした</p>'; return; }
   grid.innerHTML = renderTopicChips() + items.map(item => {
     const v = {
@@ -650,6 +772,13 @@ function trimNote(text, max) {
 function playVideo(video, thumbEl) {
   const normalizedVideo = normalizeVideoRecord(video);
   if (!normalizedVideo.id) return;
+  trackMarketingEvent('video_played', {
+    subject_id: normalizedVideo.subjectId || 'unknown',
+    unit_id: normalizedVideo.unitId || 'unknown'
+  });
+  trackFirstMilestone('first_video_played', 'first_video_played', {
+    subject_id: normalizedVideo.subjectId || 'unknown'
+  });
   // 履歴に追加
   addToHistory(normalizedVideo);
   // 再生
@@ -815,6 +944,7 @@ function saveNewList() {
   const newList = { id: Date.now().toString(), name, videos: [] };
   lists.push(newList);
   saveLists(lists);
+  trackMarketingEvent('study_list_created', { list_count: lists.length });
   hide('newListModal');
   const cb = document.getElementById('saveNewList')._callback;
   if (cb) cb(newList.id);
@@ -848,9 +978,20 @@ function addToList(listId) {
   const lists = loadLists();
   const list = lists.find(l => l.id === listId);
   if (!list || !pendingAddVideo) return;
+  let added = false;
   if (!list.videos.some(v => v.id === pendingAddVideo.id)) {
     list.videos.push(pendingAddVideo);
     saveLists(lists);
+    added = true;
+  }
+  if (added) {
+    trackMarketingEvent('video_saved_to_list', {
+      subject_id: pendingAddVideo.subjectId || 'unknown',
+      list_video_count: list.videos.length
+    });
+    trackFirstMilestone('first_video_saved', 'first_video_saved', {
+      subject_id: pendingAddVideo.subjectId || 'unknown'
+    });
   }
   hide('addToListModal');
   showToast(`「${list.name}」に追加しました`);
@@ -889,6 +1030,12 @@ function openMemo(video) {
 function saveMemoFn() {
   const text = document.getElementById('memoText').value.trim();
   persistMemoText(pendingMemoVideoId, text);
+  if (text) {
+    trackMarketingEvent('study_memo_saved', {
+      subject_id: pendingMemoVideo?.subjectId || 'unknown',
+      note_length_bucket: text.length < 40 ? 'short' : text.length < 120 ? 'medium' : 'long'
+    });
+  }
   hide('memoModal');
   showToast('メモを保存しました');
 }
@@ -960,6 +1107,10 @@ function teachbackSessionId(videoId, signature) {
 
 function openTeachback(video) {
   pendingTeachbackVideo = normalizeVideoRecord(video);
+  trackMarketingEvent('teachback_opened', {
+    subject_id: pendingTeachbackVideo.subjectId || 'unknown',
+    unit_id: pendingTeachbackVideo.unitId || 'unknown'
+  });
   const context = getVideoStudyContext(pendingTeachbackVideo);
   document.getElementById('teachbackTitle').textContent = trimNote(pendingTeachbackVideo.title, 62);
   document.getElementById('teachbackSource').innerHTML = `
@@ -1256,6 +1407,9 @@ async function generateTeachback() {
     return;
   }
   if (!authUser) {
+    trackMarketingEvent('teachback_login_required', {
+      subject_id: pendingTeachbackVideo.subjectId || 'unknown'
+    });
     resumeTeachbackAfterLogin = true;
     resumeTeachbackText = text;
     hide('teachbackModal');
@@ -1276,6 +1430,9 @@ async function generateTeachback() {
     cacheTeachbackSession(existing);
     renderTeachbackFeedback(existing.feedback, signature);
     setTeachbackStatus('同じ説明の保存済み結果を表示しています。AIは再実行していません。', 'cached');
+    trackMarketingEvent('ai_teachback_cached', {
+      subject_id: pendingTeachbackVideo.subjectId || 'unknown'
+    });
     return;
   }
 
@@ -1325,12 +1482,14 @@ async function generateTeachback() {
         : '結果とカードをこの端末に保存しました。クラウド同期は通信回復後にもう一度お試しください。',
       cloudSaved ? 'success' : 'warning'
     );
-    if (typeof gtag === 'function') {
-      gtag('event', 'ai_teachback_generated', {
-        subject_id: pendingTeachbackVideo.subjectId || 'unknown',
-        card_count: cards.length
-      });
-    }
+    trackMarketingEvent('ai_teachback_generated', {
+      subject_id: pendingTeachbackVideo.subjectId || 'unknown',
+      card_count: cards.length
+    });
+    trackFirstMilestone('first_teachback_completed', 'first_teachback_completed', {
+      subject_id: pendingTeachbackVideo.subjectId || 'unknown',
+      card_count: cards.length
+    });
   } catch (err) {
     console.error(err);
     setTeachbackStatus(getAiErrorMessage(err), 'error');
@@ -1504,6 +1663,14 @@ async function gradeReviewCard(cardId, remembered) {
   const card = loadReviewCards()[cardId];
   if (!card || !authUser || card.userId !== authUser.uid) return;
   const updated = scheduleReviewCard(card, remembered);
+  trackMarketingEvent('review_card_completed', {
+    review_stage: Number(card.stage) || 0,
+    remembered: Boolean(remembered),
+    mastered: updated.status === 'mastered'
+  });
+  trackFirstMilestone('first_review_card_completed', 'first_review_card_completed', {
+    remembered: Boolean(remembered)
+  });
   cacheReviewCardEntries([updated]);
   queueReviewCardSync(updated);
   try {
@@ -1551,6 +1718,10 @@ function createAiReviewSignature(video, note, difficulty) {
 
 async function openAiReview(video) {
   pendingAiVideo = { ...video };
+  trackMarketingEvent('ai_review_opened', {
+    subject_id: pendingAiVideo.subjectId || 'unknown',
+    unit_id: pendingAiVideo.unitId || 'unknown'
+  });
   const context = getVideoStudyContext(video);
   const note = loadNotes()[video.id]?.text || '';
   document.getElementById('aiReviewTitle').textContent = trimNote(video.title, 62);
@@ -1795,12 +1966,10 @@ async function generateAiReview() {
     renderAiReview(review, signature);
     setAiReviewStatus('復習セットを作成し、保存しました。', 'success');
     document.getElementById('generateAiReview').textContent = '同じ内容でもう一度作る';
-    if (typeof gtag === 'function') {
-      gtag('event', 'ai_review_generated', {
-        subject_id: pendingAiVideo.subjectId || 'unknown',
-        difficulty
-      });
-    }
+    trackMarketingEvent('ai_review_generated', {
+      subject_id: pendingAiVideo.subjectId || 'unknown',
+      difficulty
+    });
   } catch (err) {
     console.error(err);
     setAiReviewStatus(getAiErrorMessage(err), 'error');
@@ -2284,6 +2453,7 @@ async function initAiServices(app) {
 }
 
 function openAuthModal() {
+  trackMarketingEvent('auth_opened');
   show('authModal');
   if (authUser) setAuthStatus(`${authUser.email || 'ログイン中'} として同期中です。`);
   else if (!authReady) setAuthStatus(authInitMessage);
@@ -2375,6 +2545,7 @@ async function loginWithGoogle() {
       }
       throw err;
     }
+    trackMarketingEvent('login', { method: 'google' });
     hide('authModal');
     showToast('ログインしました');
   } catch (err) {
@@ -2395,6 +2566,7 @@ async function loginWithEmail(isSignup) {
   try {
     if (isSignup) await authApi.authMod.createUserWithEmailAndPassword(authApi.auth, email, password);
     else await authApi.authMod.signInWithEmailAndPassword(authApi.auth, email, password);
+    trackMarketingEvent(isSignup ? 'sign_up' : 'login', { method: 'email' });
     hide('authModal');
     showToast(isSignup ? '登録して同期を開始しました' : 'ログインしました');
   } catch (err) {
