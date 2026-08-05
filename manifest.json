@@ -1,7 +1,7 @@
 {
-  "name": "ManaCue - 受験生のための動画学習",
+  "name": "ManaCue（マナキュー）- 受験生のための動画学習",
   "short_name": "ManaCue",
-  "description": "教科と単元を選ぶだけで、受験に役立つ授業動画がすぐ見つかる",
+  "description": "共通テスト13教科の動画整理、AI復習、共テ型演習を一つにつなげる学習サービス",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#e8f4f0",
