@@ -3,7 +3,7 @@ let currentSubject = null;
 let currentUnit = null;
 let currentTopic = null;
 let currentOrder = 'relevance';
-let currentView = 'search'; // search | history | lists | reviews
+let currentView = 'search'; // search | history | lists | reviews | practice
 let pendingAddVideo = null;
 let pendingMemoVideoId = null;
 let pendingMemoVideo = null;
@@ -167,6 +167,7 @@ function init() {
   renderSubjectList();
   renderMobileSubjectGrid();
   bindNav();
+  if (typeof initPractice === 'function') initPractice();
   initA2HS();
   document.getElementById('searchBtn').addEventListener('click', doSearch);
   document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
@@ -218,6 +219,7 @@ function bindNav() {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
+      btn.scrollIntoView?.({ behavior: 'smooth', block: 'nearest', inline: 'center' });
       switchView(btn.dataset.view);
     });
   });
@@ -226,7 +228,7 @@ function bindNav() {
 function switchView(view) {
   currentView = view;
   trackMarketingEvent('app_view_opened', { app_view: view });
-  hide('searchView'); hide('historyView'); hide('listsView'); hide('reviewCardsView');
+  hide('searchView'); hide('historyView'); hide('listsView'); hide('reviewCardsView'); hide('practiceView');
   const sidebar = document.getElementById('sidebar');
   if (view === 'search') {
     show('searchView');
@@ -243,6 +245,10 @@ function switchView(view) {
     show('reviewCardsView');
     sidebar.style.display = 'none';
     renderReviewCardsView();
+  } else if (view === 'practice') {
+    show('practiceView');
+    sidebar.style.display = 'none';
+    if (typeof renderPracticeView === 'function') renderPracticeView();
   }
 }
 
@@ -528,6 +534,7 @@ function showUnitView() {
     <div class="unit-card" onclick="selectUnit('${u.id}')">
       <h3>${u.name}</h3>
       <p>${u.topics.length}単元</p>
+      ${typeof renderUnitPracticeAction === 'function' ? renderUnitPracticeAction(currentSubject.id, u.id) : ''}
     </div>
   `).join('');
   applyDepthIn('#unitGrid .unit-card');
@@ -680,6 +687,9 @@ function renderTopicChips() {
   return `<div class="topic-chips" style="grid-column:1/-1">
     <div class="topic-chip${!currentTopic ? ' active' : ''}" onclick="selectTopic(null)">すべて</div>
     ${currentUnit.topics.map(t => `<div class="topic-chip${currentTopic === t ? ' active' : ''}" onclick="selectTopic('${t}')">${t}</div>`).join('')}
+    ${typeof renderVideoPracticeAction === 'function'
+      ? renderVideoPracticeAction(currentSubject?.id || '', currentUnit.id, currentTopic || '')
+      : ''}
   </div>`;
 }
 
@@ -2316,6 +2326,7 @@ async function initAuth() {
       authUser = user;
       updateAuthUi();
       updateInboxVisibility();
+      if (typeof onPracticeAuthChanged === 'function') onPracticeAuthChanged(user);
       if (user) {
         await loadCloudState();
         await loadDueReviewCardsFromCloud();

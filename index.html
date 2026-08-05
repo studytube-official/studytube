@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ManaCue - YouTube学習を、見ただけで終わらせない</title>
-  <meta name="description" content="共通テスト13教科のYouTube動画を探して整理し、自分の言葉で説明。AIティーチバックと3日後・7日後の復習カードで、見るだけの勉強を身につく学習へ。">
+  <meta name="description" content="共通テスト13教科のYouTube動画を探して整理し、自分の言葉で説明。AIティーチバック、復習カード、共テ型演習で、見るだけの勉強を解ける学習へ。">
   <link rel="canonical" href="https://manacue.com/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="ManaCue">
@@ -30,7 +30,7 @@
     gtag('config', 'G-02RE0K5Q9F');
   </script>
 
-  <link rel="stylesheet" href="style.css?v=20260729a">
+  <link rel="stylesheet" href="style.css?v=20260805b">
 </head>
 <body>
   <header>
@@ -44,6 +44,7 @@
           🔁 今日の復習
           <span id="reviewDueBadge" class="review-due-badge hidden">0</span>
         </button>
+        <button class="nav-btn practice-nav-btn" data-view="practice">✦ 共テ型演習 <small>β</small></button>
         <button class="nav-btn" id="feedbackBtn" type="button">💬 ご意見</button>
         <button class="nav-btn hidden" id="inboxBtn" type="button">📮 受信箱</button>
       </nav>
@@ -83,7 +84,7 @@
           <div class="welcome-inner">
             <p class="welcome-kicker">CUE MAPで学ぶ。ManaCueで身につける。</p>
             <h2>見ただけを、解けるに。</h2>
-            <p class="welcome-lead">共テ13教科の動画を整理して、自分の言葉で説明。AIが理解の穴を見つけ、3日後・7日後の復習につなげます。</p>
+            <p class="welcome-lead">共テ13教科の動画を整理して、自分の言葉で説明。AIが理解の穴を見つけ、復習カードと共テ型演習で「解ける」までつなげます。</p>
             <div class="welcome-flow" aria-label="ManaCueの学習ステップ">
               <span><b>1</b>動画を探す</span>
               <i>→</i>
@@ -92,6 +93,8 @@
               <span><b>3</b>説明する</span>
               <i>→</i>
               <span><b>4</b>復習する</span>
+              <i>→</i>
+              <span><b>5</b>共テ型で解く</span>
             </div>
             <p class="welcome-start">左の教科から、今日見る1本を選んでください。</p>
           </div>
@@ -165,6 +168,73 @@
           <h3>今日の復習はありません</h3>
           <p id="reviewUpcomingText">動画を見たら「学びを説明」から始めてみましょう。</p>
         </div>
+      </div>
+
+      <!-- 共テ型AI演習ビュー -->
+      <div id="practiceView" class="hidden">
+        <section class="practice-hero">
+          <div>
+            <span class="practice-kicker">先行β・ログインユーザー無料</span>
+            <h2>共テ型AI演習</h2>
+            <p>動画で学んだあと、今度は自分で解く。単元・大問型・教科の3方向から、ManaCueオリジナル問題に挑戦できます。</p>
+          </div>
+          <div class="practice-hero-mark" aria-hidden="true"><span>?</span><i>✦</i></div>
+        </section>
+
+        <div class="practice-beta-notice" role="note">
+          <strong>英語・数学・情報Iから先行公開</strong>
+          <p>大学入試センターの過去問を転載・改変したものではありません。公表されている出題方針と学習範囲を参考に作成した、非公式のオリジナル練習問題です。</p>
+        </div>
+
+        <div id="practiceSetup" class="practice-setup-card">
+          <div id="practiceModeTabs" class="practice-mode-tabs" role="tablist" aria-label="演習の選び方">
+            <button type="button" class="active" data-practice-mode="unit" role="tab" aria-selected="true">
+              <span>単元別</span><small>苦手をピンポイントで</small>
+            </button>
+            <button type="button" data-practice-mode="section" role="tab" aria-selected="false">
+              <span>大問型別</span><small>出題形式に慣れる</small>
+            </button>
+            <button type="button" data-practice-mode="subject" role="tab" aria-selected="false">
+              <span>教科セット</span><small>範囲を横断して確認</small>
+            </button>
+          </div>
+
+          <div class="practice-fields">
+            <label>
+              <span>教科</span>
+              <select id="practiceSubjectSelect"></select>
+            </label>
+            <label id="practiceUnitField">
+              <span>単元</span>
+              <select id="practiceUnitSelect"></select>
+            </label>
+            <label id="practiceTopicField">
+              <span>内容</span>
+              <select id="practiceTopicSelect"></select>
+            </label>
+            <label id="practiceSectionField" class="hidden">
+              <span>大問型</span>
+              <select id="practiceSectionSelect"></select>
+            </label>
+            <label>
+              <span>難易度</span>
+              <select id="practiceDifficultySelect">
+                <option value="all">すべて</option>
+                <option value="basic">基礎</option>
+                <option value="standard">標準</option>
+                <option value="advanced">発展</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="practice-start-row">
+            <div id="practiceSetupSummary" class="practice-setup-summary"></div>
+            <button id="startPracticeBtn" class="btn-primary" type="button">3問を始める</button>
+          </div>
+          <p class="practice-quality-note">解答後に正答と解説を表示します。誤りや曖昧さを見つけた場合は、問題ごとの「問題を報告」から送信できます。</p>
+        </div>
+
+        <div id="practiceSession" class="practice-session hidden"></div>
       </div>
 
     </main>
@@ -376,7 +446,9 @@
   </div>
 
   <script src="data.js?v=20260712a"></script>
+  <script src="practice-data.js?v=20260805a"></script>
+  <script src="practice.js?v=20260805c"></script>
   <script src="auth-config.js?v=20260719b"></script>
-  <script src="app.js?v=20260729a"></script>
+  <script src="app.js?v=20260805b"></script>
 </body>
 </html>
